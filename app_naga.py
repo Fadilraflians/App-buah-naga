@@ -661,8 +661,9 @@ def load_models():
         DTypePolicyClass = DTypePolicyCompat
     
     # Custom objects untuk load model dengan compatibility fixes
+    # PERBAIKAN: Jangan include InputLayer karena menyebabkan error 'as_list'
+    # Hanya handle DTypePolicy
     custom_objects = {
-        'InputLayer': CompatibleInputLayer,
         'DTypePolicy': DTypePolicyClass,
     }
     
