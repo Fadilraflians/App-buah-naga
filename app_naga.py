@@ -683,15 +683,34 @@ def load_models():
         st.error(f"File model VGG16 '{os.path.basename(VGG16_MODEL_PATH)}' tidak ditemukan.")
 
     # Muat MobileNetV2
-    # Debug: Tampilkan path yang dicoba
+    # PERBAIKAN: Coba load dengan beberapa metode untuk handle compatibility
     if os.path.exists(MOBILENETV2_MODEL_PATH):
         try:
-            model_mobilenetv2 = tf.keras.models.load_model(
-                MOBILENETV2_MODEL_PATH,
-                compile=False,
-                custom_objects=custom_objects
-            )
-            # st.success(f"Model MobileNetV2 berhasil dimuat dari '{MOBILENETV2_MODEL_PATH}'.") # Dihapus
+            # Method 1: Load normal dengan custom_objects
+            try:
+                model_mobilenetv2 = tf.keras.models.load_model(
+                    MOBILENETV2_MODEL_PATH,
+                    compile=False,
+                    custom_objects=custom_objects
+                )
+            except Exception as e2:
+                # Method 2: Load tanpa custom_objects
+                if 'batch_shape' in str(e2).lower() or 'DTypePolicy' in str(e2) or 'as_list' in str(e2):
+                    try:
+                        model_mobilenetv2 = tf.keras.models.load_model(
+                            MOBILENETV2_MODEL_PATH,
+                            compile=False
+                        )
+                    except:
+                        try:
+                            model_mobilenetv2 = tf.keras.models.load_model(
+                                MOBILENETV2_MODEL_PATH,
+                                compile=True
+                            )
+                        except:
+                            raise e2
+                else:
+                    raise e2
         except Exception as e:
             st.error(f"Gagal memuat model MobileNetV2. Error: {e}")
             import traceback
