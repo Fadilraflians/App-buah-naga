@@ -23,24 +23,34 @@ st.set_page_config(
 # --- PERUBAHAN: Menggunakan Path Relatif untuk Cloud Deployment ---
 # Path otomatis detect dari lokasi file app_naga.py
 try:
-    # Dapatkan direktori tempat file app_naga.py berada
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    MODEL_RESULTS_DIR = os.path.join(BASE_DIR, 'model_results')
+    # Method 1: Coba dari __file__ (untuk local development)
+    try:
+        BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+        MODEL_RESULTS_DIR = os.path.join(BASE_DIR, 'model_results')
+        if not os.path.exists(MODEL_RESULTS_DIR):
+            raise FileNotFoundError()
+    except:
+        # Method 2: Coba dari current working directory (untuk Streamlit Cloud)
+        BASE_DIR = os.getcwd()
+        MODEL_RESULTS_DIR = os.path.join(BASE_DIR, 'model_results')
+        if not os.path.exists(MODEL_RESULTS_DIR):
+            # Method 3: Fallback ke absolute path untuk development lokal
+            MODEL_RESULTS_DIR = r"E:\TUGAS\Skripsi\model_results"
+            BASE_DIR = os.path.dirname(MODEL_RESULTS_DIR)
     
-    # Fallback ke absolute path jika tidak ada (untuk development lokal)
+    # Final check
     if not os.path.exists(MODEL_RESULTS_DIR):
-        # Coba path absolut untuk development lokal
-        MODEL_RESULTS_DIR = r"E:\TUGAS\Skripsi\model_results"
-        BASE_DIR = os.path.dirname(MODEL_RESULTS_DIR)
-    
-    if not os.path.exists(MODEL_RESULTS_DIR):
-        st.error(f"Error: Folder model_results tidak ditemukan di path: {MODEL_RESULTS_DIR}")
+        st.error(f"❌ Error: Folder model_results tidak ditemukan!")
+        st.error(f"Path yang dicoba: {MODEL_RESULTS_DIR}")
         st.error("Pastikan folder 'model_results' ada di repository GitHub Anda.")
+        st.info("💡 Cek di: https://github.com/Fadilraflians/App-buah-naga/tree/main/model_results")
         st.stop()
         
 except Exception as e:
-    st.error(f"Error saat mengatur path: {e}")
+    st.error(f"❌ Error saat mengatur path: {e}")
     st.error("Pastikan semua files sudah ter-upload ke GitHub.")
+    import traceback
+    st.code(traceback.format_exc())
     st.stop()
 
 # Menentukan path lengkap ke file model
