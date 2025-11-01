@@ -22,26 +22,57 @@ st.set_page_config(
 
 # --- PERUBAHAN: Menggunakan Path Relatif untuk Cloud Deployment ---
 # Path otomatis detect dari lokasi file app_naga.py
+# PERBAIKAN: Di Streamlit Cloud, file berada di /mount/src/app-buah-naga/
 try:
-    # Method 1: Coba dari __file__ (untuk local development)
+    # Method 1: Coba dari __file__ (untuk local development dan Streamlit Cloud)
     try:
         BASE_DIR = os.path.dirname(os.path.abspath(__file__))
         MODEL_RESULTS_DIR = os.path.join(BASE_DIR, 'model_results')
-        if not os.path.exists(MODEL_RESULTS_DIR):
+        
+        # Debug: Tampilkan path yang dicoba (hanya untuk troubleshooting)
+        import sys
+        if 'streamlit' in sys.modules and not os.path.exists(MODEL_RESULTS_DIR):
+            # Di Streamlit Cloud, cek juga di mount/src
+            possible_paths = [
+                MODEL_RESULTS_DIR,  # Dari __file__
+                os.path.join(os.getcwd(), 'model_results'),  # Dari current working directory
+                '/mount/src/app-buah-naga/model_results',  # Path Streamlit Cloud langsung
+            ]
+            
+            for path in possible_paths:
+                if os.path.exists(path):
+                    MODEL_RESULTS_DIR = path
+                    BASE_DIR = os.path.dirname(path)
+                    break
+        elif not os.path.exists(MODEL_RESULTS_DIR):
             raise FileNotFoundError()
+            
     except:
-        # Method 2: Coba dari current working directory (untuk Streamlit Cloud)
+        # Method 2: Coba dari current working directory
         BASE_DIR = os.getcwd()
         MODEL_RESULTS_DIR = os.path.join(BASE_DIR, 'model_results')
+        
+        # Method 3: Coba path Streamlit Cloud
         if not os.path.exists(MODEL_RESULTS_DIR):
-            # Method 3: Fallback ke absolute path untuk development lokal
+            streamlit_path = '/mount/src/app-buah-naga/model_results'
+            if os.path.exists(streamlit_path):
+                MODEL_RESULTS_DIR = streamlit_path
+                BASE_DIR = os.path.dirname(streamlit_path)
+        
+        # Method 4: Fallback ke absolute path untuk development lokal
+        if not os.path.exists(MODEL_RESULTS_DIR):
             MODEL_RESULTS_DIR = r"E:\TUGAS\Skripsi\model_results"
             BASE_DIR = os.path.dirname(MODEL_RESULTS_DIR)
     
-    # Final check
+    # Final check dengan debug info
     if not os.path.exists(MODEL_RESULTS_DIR):
         st.error(f"❌ Error: Folder model_results tidak ditemukan!")
         st.error(f"Path yang dicoba: {MODEL_RESULTS_DIR}")
+        st.error(f"Current working directory: {os.getcwd()}")
+        try:
+            st.error(f"__file__ path: {os.path.abspath(__file__) if '__file__' in globals() else 'N/A'}")
+        except:
+            pass
         st.error("Pastikan folder 'model_results' ada di repository GitHub Anda.")
         st.info("💡 Cek di: https://github.com/Fadilraflians/App-buah-naga/tree/main/model_results")
         st.stop()
