@@ -888,13 +888,15 @@ with st.sidebar:
     st.markdown("### 📝 Cara Penggunaan")
     st.markdown("""
     <div class="info-box">
+        <p style="margin: 0 0 0.5rem 0;"><strong>Pilih metode input:</strong></p>
         <ol style="margin: 0; padding-left: 1.5rem;">
-            <li>📤 Unggah gambar buah naga</li>
+            <li><strong>📤 Upload File:</strong> Pilih gambar dari komputer</li>
+            <li><strong>📷 Scan dengan Kamera:</strong> Gunakan kamera untuk mengambil foto langsung</li>
             <li>⏳ Tunggu proses klasifikasi</li>
             <li>📊 Lihat hasil prediksi</li>
         </ol>
     </div>
-    """, unsafe_allow_html=True) # Disederhanakan
+    """, unsafe_allow_html=True)
     
     st.markdown("---")
     st.markdown("### 🏷 Label Kelas")
@@ -1246,24 +1248,62 @@ st.markdown('<h2 class="sub-header">🔍 Klasifikasi Buah Naga</h2>', unsafe_all
 
 st.markdown("""
 <div class="info-box">
-    <h3 style="color: white; font-weight: 700; margin-bottom: 1rem;">📤 Unggah Gambar Buah Naga</h3>
+    <h3 style="color: white; font-weight: 700; margin-bottom: 1rem;">📸 Input Gambar Buah Naga</h3>
     <p style="color: white; font-weight: 500; font-size: 1.1rem; line-height: 1.6;">
-        Pilih gambar buah naga dalam format JPG, JPEG, atau PNG untuk melakukan klasifikasi tingkat kematangan.
+        Upload gambar dari komputer atau scan langsung dengan kamera untuk melakukan klasifikasi tingkat kematangan buah naga.
+        Format yang didukung: JPG, JPEG, PNG.
     </p>
 </div>
 """, unsafe_allow_html=True)
 
-uploaded_file = st.file_uploader(
-    "Pilih gambar buah naga...",
-    type=["jpg", "jpeg", "png"],
-    help="Format yang didukung: JPG, JPEG, PNG"
+# Pilih metode input: Upload File atau Scan Camera
+input_method = st.radio(
+    "📸 Pilih Metode Input:",
+    ["📤 Upload File", "📷 Scan dengan Kamera"],
+    horizontal=True,
+    help="Pilih untuk upload file dari komputer atau scan langsung dengan kamera"
 )
 
+uploaded_file = None
+camera_image = None
+
+if input_method == "📤 Upload File":
+    uploaded_file = st.file_uploader(
+        "Pilih gambar buah naga...",
+        type=["jpg", "jpeg", "png"],
+        help="Format yang didukung: JPG, JPEG, PNG"
+    )
+elif input_method == "📷 Scan dengan Kamera":
+    st.markdown("""
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                padding: 1.5rem; border-radius: 10px; margin-bottom: 1rem;">
+        <h4 style="color: white; margin: 0;">📷 Mode Scan Kamera</h4>
+        <p style="color: white; margin: 0.5rem 0 0 0; font-size: 0.9rem;">
+            Arahkan kamera ke buah naga dan klik tombol "Take Photo" untuk mengambil foto.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    camera_image = st.camera_input(
+        "Ambil foto buah naga dengan kamera:",
+        help="Klik tombol di bawah kamera untuk mengambil foto. Pastikan cahaya cukup dan buah naga terlihat jelas."
+    )
+    
+    if camera_image is not None:
+        uploaded_file = camera_image  # Gunakan image dari kamera sebagai uploaded_file
+
 if uploaded_file is not None:
-    st.markdown("### 📷 Gambar yang Diunggah")
+    # Tentukan caption berdasarkan metode input
+    if input_method == "📷 Scan dengan Kamera":
+        image_caption = "📷 Foto dari Kamera"
+        st.markdown("### 📷 Foto yang Diambil dari Kamera")
+    else:
+        image_caption = "📤 Gambar yang Diunggah"
+        st.markdown("### 📷 Gambar yang Diunggah")
+    
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        st.image(uploaded_file, caption="Gambar Buah Naga", use_container_width=True) # Perubahan di sini
+        st.image(uploaded_file, caption=image_caption, use_container_width=True)
     
     st.markdown("### ⚡ Proses Klasifikasi") # Dihapus (Lokal)
     
