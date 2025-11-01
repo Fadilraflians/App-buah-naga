@@ -581,41 +581,30 @@ def load_models():
     model_vgg16 = None
     model_mobilenetv2 = None
 
-    # Custom object untuk handle batch_shape compatibility issue
-    # TensorFlow versi baru tidak support batch_shape, perlu custom handler
-    def fix_input_layer_config(layer_config):
-        """Fix batch_shape menjadi input_shape untuk kompatibilitas TensorFlow baru"""
-        if 'batch_shape' in layer_config:
-            if 'input_shape' not in layer_config:
-                # Convert batch_shape [None, H, W, C] ke input_shape [H, W, C]
-                batch_shape = layer_config.pop('batch_shape')
+    # Fix untuk batch_shape compatibility issue dengan TensorFlow 2.13+
+    # Model dibuat dengan TensorFlow lama yang menggunakan batch_shape
+    # TensorFlow baru tidak support batch_shape, perlu custom InputLayer
+    class CompatibleInputLayer(tf.keras.layers.InputLayer):
+        """Custom InputLayer yang handle batch_shape untuk kompatibilitas"""
+        def __init__(self, **kwargs):
+            # Convert batch_shape [None, H, W, C] ke input_shape [H, W, C]
+            if 'batch_shape' in kwargs and 'input_shape' not in kwargs:
+                batch_shape = kwargs.pop('batch_shape')
                 if batch_shape and len(batch_shape) > 1:
-                    layer_config['input_shape'] = batch_shape[1:]  # Skip batch dimension
-        return layer_config
+                    kwargs['input_shape'] = batch_shape[1:]  # Skip batch dimension (None)
+            super().__init__(**kwargs)
+    
+    # Custom objects untuk load model dengan compatibility fix
+    custom_objects = {'InputLayer': CompatibleInputLayer}
     
     # Muat VGG16
     if os.path.exists(VGG16_MODEL_PATH):
         try:
-            # Method 1: Coba load normal dulu
-            try:
-                model_vgg16 = tf.keras.models.load_model(VGG16_MODEL_PATH, compile=False)
-            except Exception as e1:
-                # Method 2: Load dengan custom_objects untuk handle batch_shape
-                if 'batch_shape' in str(e1).lower() or 'InputLayer' in str(e1):
-                    # Load dengan safe_mode=False dan compile=False
-                    try:
-                        model_vgg16 = tf.keras.models.load_model(
-                            VGG16_MODEL_PATH, 
-                            compile=False,
-                            safe_mode=False
-                        )
-                    except:
-                        # Last resort: Load weights saja dan rebuild structure (jika perlu)
-                        st.warning("⚠️ Model VGG16 memiliki kompatibilitas issue. Mencoba load alternatif...")
-                        # Untuk sekarang, tetap coba load normal
-                        model_vgg16 = tf.keras.models.load_model(VGG16_MODEL_PATH, compile=False)
-                else:
-                    raise e1
+            model_vgg16 = tf.keras.models.load_model(
+                VGG16_MODEL_PATH, 
+                compile=False,
+                custom_objects=custom_objects
+            )
             # st.success(f"Model VGG16 berhasil dimuat dari '{VGG16_MODEL_PATH}'.") # Dihapus
         except Exception as e:
             st.error(f"Gagal memuat model VGG16. Error: {e}")
@@ -627,23 +616,11 @@ def load_models():
     # Muat MobileNetV2
     if os.path.exists(MOBILENETV2_MODEL_PATH):
         try:
-            # Method 1: Coba load normal dulu
-            try:
-                model_mobilenetv2 = tf.keras.models.load_model(MOBILENETV2_MODEL_PATH, compile=False)
-            except Exception as e2:
-                # Method 2: Load dengan safe_mode=False untuk handle batch_shape
-                if 'batch_shape' in str(e2).lower() or 'InputLayer' in str(e2):
-                    try:
-                        model_mobilenetv2 = tf.keras.models.load_model(
-                            MOBILENETV2_MODEL_PATH,
-                            compile=False,
-                            safe_mode=False
-                        )
-                    except:
-                        st.warning("⚠️ Model MobileNetV2 memiliki kompatibilitas issue. Mencoba load alternatif...")
-                        model_mobilenetv2 = tf.keras.models.load_model(MOBILENETV2_MODEL_PATH, compile=False)
-                else:
-                    raise e2
+            model_mobilenetv2 = tf.keras.models.load_model(
+                MOBILENETV2_MODEL_PATH,
+                compile=False,
+                custom_objects=custom_objects
+            )
         except Exception as e:
             st.error(f"Gagal memuat model MobileNetV2. Error: {e}")
             import traceback
