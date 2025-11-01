@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contoh Penggunaan API Klasifikasi Buah Naga</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container {
+            background: rgba(255,255,255,0.1);
+            padding: 30px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+        input[type="file"] {
+            margin: 20px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 10px;
+            color: #333;
+        }
+        button {
+            background: linear-gradient(45deg, #4ECDC4, #45B7D1);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+        #result {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            display: none;
+        }
+        .result-item {
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+        }
+        #preview {
+            max-width: 100%;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🐉 Klasifikasi Buah Naga via API</h1>
+        <p>Upload gambar buah naga untuk mendapatkan prediksi dari model VGG16 dan MobileNetV2</p>
+        
+        <input type="file" id="imageInput" accept="image/*">
+        <br>
+        <button onclick="predictImage()">🔍 Klasifikasikan</button>
+        
+        <div class="loading" id="loading">
+            <p>⏳ Memproses gambar...</p>
+        </div>
+        
+        <img id="preview" style="display: none;">
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        // GANTI URL INI dengan URL API Anda setelah hosting
+        const API_URL = "http://localhost:8000";  // Untuk local
+        // const API_URL = "https://your-api-url.railway.app";  // Untuk production
+
+        // Preview gambar saat dipilih
+        document.getElementById('imageInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('preview');
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        async function predictImage() {
+            const fileInput = document.getElementById('imageInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Silakan pilih gambar terlebih dahulu!');
+                return;
+            }
+
+            const loading = document.getElementById('loading');
+            const result = document.getElementById('result');
+            
+            loading.style.display = 'block';
+            result.style.display = 'none';
+
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const response = await fetch(`${API_URL}/api/predict/both`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                // Tampilkan hasil
+                let html = '<h2>📊 Hasil Prediksi</h2>';
+                
+                if (data.vgg16) {
+                    html += `
+                        <div class="result-item">
+                            <h3>🔵 VGG16</h3>
+                            <p><strong>Prediksi:</strong> ${data.vgg16.prediction}</p>
+                            <p><strong>Confidence:</strong> ${data.vgg16.confidence.toFixed(2)}%</p>
+                            <p><strong>Valid:</strong> ${data.vgg16.statistics.is_valid ? '✅ Ya' : '❌ Tidak'}</p>
+                        </div>
+                    `;
+                }
+                
+                if (data.mobilenetv2) {
+                    html += `
+                        <div class="result-item">
+                            <h3>🟢 MobileNetV2</h3>
+                            <p><strong>Prediksi:</strong> ${data.mobilenetv2.prediction}</p>
+                            <p><strong>Confidence:</strong> ${data.mobilenetv2.confidence.toFixed(2)}%</p>
+                            <p><strong>Valid:</strong> ${data.mobilenetv2.statistics.is_valid ? '✅ Ya' : '❌ Tidak'}</p>
+                        </div>
+                    `;
+                }
+
+                result.innerHTML = html;
+                result.style.display = 'block';
+            } catch (error) {
+                alert(`Error: ${error.message}\n\nPastikan API server sedang berjalan di ${API_URL}`);
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
+

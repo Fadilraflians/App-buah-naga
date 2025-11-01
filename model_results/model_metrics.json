@@ -1,0 +1,18 @@
+{
+    "vgg16": {
+        "test_accuracy": 0.9733333587646484,
+        "test_loss": 0.08706101775169373,
+        "model_size_mb": 183.75296783447266,
+        "plot_path": "/kaggle/working/model_results/VGG16_accuracy_loss.png",
+        "report_path": "/kaggle/working/model_results/VGG16_classification_report.txt",
+        "cm_path": "/kaggle/working/model_results/VGG16_confusion_matrix.png"
+    },
+    "mobilenetv2": {
+        "test_accuracy": 0.9766666889190674,
+        "test_loss": 0.05923648923635483,
+        "model_size_mb": 202.11697387695312,
+        "plot_path": "/kaggle/working/model_results/MobileNetV2_accuracy_loss.png",
+        "report_path": "/kaggle/working/model_results/MobileNetV2_classification_report.txt",
+        "cm_path": "/kaggle/working/model_results/MobileNetV2_confusion_matrix.png"
+    }
+}

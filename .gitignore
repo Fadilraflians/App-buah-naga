@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+
+# Model files akan di-track dengan Git LFS
+# Jangan ignore karena kita pakai Git LFS untuk file besar
+# *.h5 akan di-handle oleh Git LFS via .gitattributes
+
+# Dataset - terlalu besar, tidak perlu di-deploy
+Dataset/
+all_dragon_fruit_images/
+dragon_fruit_split_data/
+
+# Document files
+*.docx
+*.doc
+~$*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Backup files
+backup_*
+Codingan/
+
