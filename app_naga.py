@@ -581,28 +581,75 @@ def load_models():
     model_vgg16 = None
     model_mobilenetv2 = None
 
+    # Custom object untuk handle batch_shape compatibility issue
+    # TensorFlow versi baru tidak support batch_shape, perlu custom handler
+    def fix_input_layer_config(layer_config):
+        """Fix batch_shape menjadi input_shape untuk kompatibilitas TensorFlow baru"""
+        if 'batch_shape' in layer_config:
+            if 'input_shape' not in layer_config:
+                # Convert batch_shape [None, H, W, C] ke input_shape [H, W, C]
+                batch_shape = layer_config.pop('batch_shape')
+                if batch_shape and len(batch_shape) > 1:
+                    layer_config['input_shape'] = batch_shape[1:]  # Skip batch dimension
+        return layer_config
+    
     # Muat VGG16
     if os.path.exists(VGG16_MODEL_PATH):
         try:
-            model_vgg16 = tf.keras.models.load_model(VGG16_MODEL_PATH)
+            # Method 1: Coba load normal dulu
+            try:
+                model_vgg16 = tf.keras.models.load_model(VGG16_MODEL_PATH, compile=False)
+            except Exception as e1:
+                # Method 2: Load dengan custom_objects untuk handle batch_shape
+                if 'batch_shape' in str(e1).lower() or 'InputLayer' in str(e1):
+                    # Load dengan safe_mode=False dan compile=False
+                    try:
+                        model_vgg16 = tf.keras.models.load_model(
+                            VGG16_MODEL_PATH, 
+                            compile=False,
+                            safe_mode=False
+                        )
+                    except:
+                        # Last resort: Load weights saja dan rebuild structure (jika perlu)
+                        st.warning("⚠️ Model VGG16 memiliki kompatibilitas issue. Mencoba load alternatif...")
+                        # Untuk sekarang, tetap coba load normal
+                        model_vgg16 = tf.keras.models.load_model(VGG16_MODEL_PATH, compile=False)
+                else:
+                    raise e1
             # st.success(f"Model VGG16 berhasil dimuat dari '{VGG16_MODEL_PATH}'.") # Dihapus
         except Exception as e:
             st.error(f"Gagal memuat model VGG16. Error: {e}")
-            # st.info("Pastikan TensorFlow dan h5py terinstal (pip install tensorflow h5py)") # Dihapus
+            import traceback
+            st.code(traceback.format_exc())
     else:
         st.error(f"File model VGG16 '{os.path.basename(VGG16_MODEL_PATH)}' tidak ditemukan.")
-        # st.info(f"Pastikan Anda menempatkan file model di dalam folder '{MODEL_RESULTS_DIR}'.") # Dihapus
 
     # Muat MobileNetV2
     if os.path.exists(MOBILENETV2_MODEL_PATH):
         try:
-            model_mobilenetv2 = tf.keras.models.load_model(MOBILENETV2_MODEL_PATH)
-            # st.success(f"Model MobileNetV2 berhasil dimuat dari '{MOBILENETV2_MODEL_PATH}'.") # Dihapus
+            # Method 1: Coba load normal dulu
+            try:
+                model_mobilenetv2 = tf.keras.models.load_model(MOBILENETV2_MODEL_PATH, compile=False)
+            except Exception as e2:
+                # Method 2: Load dengan safe_mode=False untuk handle batch_shape
+                if 'batch_shape' in str(e2).lower() or 'InputLayer' in str(e2):
+                    try:
+                        model_mobilenetv2 = tf.keras.models.load_model(
+                            MOBILENETV2_MODEL_PATH,
+                            compile=False,
+                            safe_mode=False
+                        )
+                    except:
+                        st.warning("⚠️ Model MobileNetV2 memiliki kompatibilitas issue. Mencoba load alternatif...")
+                        model_mobilenetv2 = tf.keras.models.load_model(MOBILENETV2_MODEL_PATH, compile=False)
+                else:
+                    raise e2
         except Exception as e:
             st.error(f"Gagal memuat model MobileNetV2. Error: {e}")
+            import traceback
+            st.code(traceback.format_exc())
     else:
         st.error(f"File model MobileNetV2 '{os.path.basename(MOBILENETV2_MODEL_PATH)}' tidak ditemukan.")
-        # st.info(f"Pastikan Anda menempatkan file model di dalam folder '{MODEL_RESULTS_DIR}'.") # Dihapus
         
     return model_vgg16, model_mobilenetv2
 
