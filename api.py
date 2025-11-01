@@ -81,30 +81,112 @@ async def load_models():
         except Exception as e:
             print(f"Error listing files: {e}")
     
-    print("\nMemuat model VGG16...")
-    if os.path.exists(VGG16_MODEL_PATH):
+    # Compatibility fixes - sama seperti di app_naga.py
+    # 1. InputLayer compatibility - handle batch_shape
+    class CompatibleInputLayer(tf.keras.layers.InputLayer):
+        """Custom InputLayer yang handle batch_shape dengan benar"""
+        @classmethod
+        def from_config(cls, config):
+            """Override from_config untuk handle batch_shape"""
+            if 'batch_shape' in config:
+                batch_shape = config.pop('batch_shape')
+                if batch_shape and len(batch_shape) > 1:
+                    config['input_shape'] = tuple(batch_shape[1:])
+            return super().from_config(config)
+    
+    # 2. DTypePolicy compatibility - handle Keras 3.x dtype policy
+    class DTypePolicyCompat:
+        """Compatible DTypePolicy untuk handle Keras 3.x model di TensorFlow 2.x"""
+        def __init__(self, name='float32', *args, **kwargs):
+            if isinstance(name, str):
+                self.name = name
+            elif hasattr(name, 'name'):
+                self.name = name.name
+            else:
+                self.name = 'float32'
+            self.compute_dtype = self.name
+            self.variable_dtype = self.name
+        
+        @property
+        def dtype(self):
+            return self.name
+        
+        @classmethod
+        def from_config(cls, config):
+            if isinstance(config, dict):
+                name = config.get('name', 'float32')
+            else:
+                name = 'float32'
+            return cls(name=name)
+        
+        def get_config(self):
+            return {'name': self.name}
+        
+        def __call__(self, dtype=None):
+            return self.name
+    
+    try:
+        from keras import DTypePolicy
+        DTypePolicyClass = DTypePolicyCompat
+    except ImportError:
+        DTypePolicyClass = DTypePolicyCompat
+    
+    custom_objects = {
+        'InputLayer': CompatibleInputLayer,
+        'DTypePolicy': DTypePolicyClass,
+    }
+    
+    # Helper function untuk load model dengan fallback
+    def load_model_safe(model_path, model_name):
+        """Load model dengan multiple fallback methods"""
+        if not os.path.exists(model_path):
+            print(f"❌ File model {model_name} tidak ditemukan: {model_path}")
+            return None
+        
         try:
-            model_vgg16 = tf.keras.models.load_model(VGG16_MODEL_PATH)
-            print(f"✅ Model VGG16 berhasil dimuat dari '{VGG16_MODEL_PATH}'")
+            # Method 1: Load dengan custom_objects
+            try:
+                model = tf.keras.models.load_model(model_path, compile=False, custom_objects=custom_objects)
+                print(f"✅ Model {model_name} berhasil dimuat (method 1)")
+                return model
+            except Exception as e1:
+                # Method 2: Load dengan compile=True
+                if 'batch_shape' in str(e1).lower() or 'DTypePolicy' in str(e1):
+                    try:
+                        model = tf.keras.models.load_model(model_path, compile=True, custom_objects=custom_objects)
+                        print(f"✅ Model {model_name} berhasil dimuat (method 2)")
+                        return model
+                    except Exception as e2:
+                        # Method 3: Load hanya dengan DTypePolicy
+                        try:
+                            model = tf.keras.models.load_model(model_path, compile=False, custom_objects={'DTypePolicy': DTypePolicyClass})
+                            print(f"✅ Model {model_name} berhasil dimuat (method 3)")
+                            return model
+                        except Exception as e3:
+                            # Method 4: Load tanpa custom_objects
+                            try:
+                                model = tf.keras.models.load_model(model_path, compile=False)
+                                print(f"✅ Model {model_name} berhasil dimuat (method 4)")
+                                return model
+                            except:
+                                print(f"❌ Gagal memuat model {model_name} dengan semua method")
+                                raise e1
+                else:
+                    raise e1
         except Exception as e:
-            print(f"❌ Gagal memuat model VGG16: {e}")
+            print(f"❌ Gagal memuat model {model_name}: {e}")
             import traceback
             traceback.print_exc()
-    else:
-        print(f"❌ File model VGG16 tidak ditemukan: {VGG16_MODEL_PATH}")
+            return None
+    
+    print("\nMemuat model VGG16...")
+    model_vgg16 = load_model_safe(VGG16_MODEL_PATH, "VGG16")
+    if model_vgg16 is None:
         print("⚠️ API akan tetap berjalan, tapi endpoint VGG16 tidak akan tersedia")
     
     print("\nMemuat model MobileNetV2...")
-    if os.path.exists(MOBILENETV2_MODEL_PATH):
-        try:
-            model_mobilenetv2 = tf.keras.models.load_model(MOBILENETV2_MODEL_PATH)
-            print(f"✅ Model MobileNetV2 berhasil dimuat dari '{MOBILENETV2_MODEL_PATH}'")
-        except Exception as e:
-            print(f"❌ Gagal memuat model MobileNetV2: {e}")
-            import traceback
-            traceback.print_exc()
-    else:
-        print(f"❌ File model MobileNetV2 tidak ditemukan: {MOBILENETV2_MODEL_PATH}")
+    model_mobilenetv2 = load_model_safe(MOBILENETV2_MODEL_PATH, "MobileNetV2")
+    if model_mobilenetv2 is None:
         print("⚠️ API akan tetap berjalan, tapi endpoint MobileNetV2 tidak akan tersedia")
     
     print("\n✅ Startup selesai!")
