@@ -598,7 +598,20 @@ def load_models():
     class DTypePolicyCompat:
         """Compatible DTypePolicy untuk handle Keras 3.x model di TensorFlow 2.x"""
         def __init__(self, name='float32', *args, **kwargs):
-            self.name = name if isinstance(name, str) else getattr(name, 'name', 'float32')
+            if isinstance(name, str):
+                self.name = name
+            elif hasattr(name, 'name'):
+                self.name = name.name
+            else:
+                self.name = 'float32'
+            # Tambahkan attribute yang dibutuhkan TensorFlow
+            self.compute_dtype = self.name
+            self.variable_dtype = self.name
+        
+        @property
+        def dtype(self):
+            """Return dtype sebagai string"""
+            return self.name
         
         @classmethod
         def from_config(cls, config):
@@ -611,6 +624,10 @@ def load_models():
         
         def get_config(self):
             return {'name': self.name}
+        
+        def __call__(self, dtype=None):
+            """Callable untuk compatibility"""
+            return self.name
     
     # Try import dari keras jika ada
     try:
@@ -643,6 +660,7 @@ def load_models():
         st.error(f"File model VGG16 '{os.path.basename(VGG16_MODEL_PATH)}' tidak ditemukan.")
 
     # Muat MobileNetV2
+    # Debug: Tampilkan path yang dicoba
     if os.path.exists(MOBILENETV2_MODEL_PATH):
         try:
             model_mobilenetv2 = tf.keras.models.load_model(
@@ -650,12 +668,25 @@ def load_models():
                 compile=False,
                 custom_objects=custom_objects
             )
+            # st.success(f"Model MobileNetV2 berhasil dimuat dari '{MOBILENETV2_MODEL_PATH}'.") # Dihapus
         except Exception as e:
             st.error(f"Gagal memuat model MobileNetV2. Error: {e}")
             import traceback
             st.code(traceback.format_exc())
     else:
-        st.error(f"File model MobileNetV2 '{os.path.basename(MOBILENETV2_MODEL_PATH)}' tidak ditemukan.")
+        # Debug info untuk troubleshooting
+        st.warning(f"⚠️ File model MobileNetV2 tidak ditemukan di path: {MOBILENETV2_MODEL_PATH}")
+        st.info(f"💡 Cek apakah file ada di GitHub: https://github.com/Fadilraflians/App-buah-naga/tree/main/model_results")
+        
+        # List files di model_results untuk debug
+        if os.path.exists(MODEL_RESULTS_DIR):
+            try:
+                files_in_dir = os.listdir(MODEL_RESULTS_DIR)
+                st.info(f"📁 Files yang ada di {MODEL_RESULTS_DIR}:")
+                for f in sorted(files_in_dir):
+                    st.text(f"   - {f}")
+            except Exception as e:
+                st.error(f"Error listing files: {e}")
         
     return model_vgg16, model_mobilenetv2
 
