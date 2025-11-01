@@ -683,16 +683,53 @@ def load_models():
     }
     
     # Muat VGG16
+    # PERBAIKAN: Coba multiple methods untuk handle compatibility issues
     if os.path.exists(VGG16_MODEL_PATH):
         try:
-            model_vgg16 = tf.keras.models.load_model(
-                VGG16_MODEL_PATH, 
-                compile=False,
-                custom_objects=custom_objects
-            )
+            # Method 1: Load dengan custom_objects (InputLayer + DTypePolicy)
+            try:
+                model_vgg16 = tf.keras.models.load_model(
+                    VGG16_MODEL_PATH, 
+                    compile=False,
+                    custom_objects=custom_objects
+                )
+            except Exception as e1:
+                # Method 2: Load weights saja, lalu rebuild architecture
+                # Ini bypass masalah batch_shape di config
+                if 'batch_shape' in str(e1).lower() or 'InputLayer' in str(e1):
+                    try:
+                        # Load model dengan compile=True mungkin bisa bypass
+                        model_vgg16 = tf.keras.models.load_model(
+                            VGG16_MODEL_PATH,
+                            compile=True,
+                            custom_objects=custom_objects
+                        )
+                    except Exception as e2:
+                        # Method 3: Load tanpa custom_objects untuk InputLayer
+                        # Hanya handle DTypePolicy
+                        try:
+                            model_vgg16 = tf.keras.models.load_model(
+                                VGG16_MODEL_PATH,
+                                compile=False,
+                                custom_objects={'DTypePolicy': DTypePolicyClass}
+                            )
+                        except Exception as e3:
+                            # Method 4: Load tanpa custom_objects sama sekali
+                            try:
+                                model_vgg16 = tf.keras.models.load_model(
+                                    VGG16_MODEL_PATH,
+                                    compile=False
+                                )
+                            except:
+                                # Semua method gagal, raise error pertama
+                                raise e1
+                else:
+                    raise e1
             # st.success(f"Model VGG16 berhasil dimuat dari '{VGG16_MODEL_PATH}'.") # Dihapus
         except Exception as e:
             st.error(f"Gagal memuat model VGG16. Error: {e}")
+            st.warning("💡 Model mungkin dibuat dengan TensorFlow/Keras versi yang berbeda")
+            st.info("💡 Solusi: Re-train model dengan TensorFlow 2.15 atau update requirements.txt ke Keras 3.x")
             import traceback
             st.code(traceback.format_exc())
     else:
