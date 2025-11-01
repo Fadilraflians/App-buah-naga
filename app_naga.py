@@ -581,9 +581,8 @@ def load_models():
     model_vgg16 = None
     model_mobilenetv2 = None
 
-    # Fix untuk batch_shape compatibility issue dengan TensorFlow 2.13+
-    # Model dibuat dengan TensorFlow lama yang menggunakan batch_shape
-    # TensorFlow baru tidak support batch_shape, perlu custom InputLayer
+    # Fix untuk compatibility issues dengan TensorFlow/Keras versi berbeda
+    # 1. batch_shape compatibility
     class CompatibleInputLayer(tf.keras.layers.InputLayer):
         """Custom InputLayer yang handle batch_shape untuk kompatibilitas"""
         def __init__(self, **kwargs):
@@ -594,8 +593,38 @@ def load_models():
                     kwargs['input_shape'] = batch_shape[1:]  # Skip batch dimension (None)
             super().__init__(**kwargs)
     
-    # Custom objects untuk load model dengan compatibility fix
-    custom_objects = {'InputLayer': CompatibleInputLayer}
+    # 2. DTypePolicy compatibility - handle Keras 3.x dtype policy
+    # Keras 3.x menggunakan DTypePolicy, TensorFlow 2.x menggunakan string langsung
+    class DTypePolicyCompat:
+        """Compatible DTypePolicy untuk handle Keras 3.x model di TensorFlow 2.x"""
+        def __init__(self, name='float32', *args, **kwargs):
+            self.name = name if isinstance(name, str) else getattr(name, 'name', 'float32')
+        
+        @classmethod
+        def from_config(cls, config):
+            """Dari config Keras 3.x"""
+            if isinstance(config, dict):
+                name = config.get('name', 'float32')
+            else:
+                name = 'float32'
+            return cls(name=name)
+        
+        def get_config(self):
+            return {'name': self.name}
+    
+    # Try import dari keras jika ada
+    try:
+        from keras import DTypePolicy
+        # Gunakan wrapper yang compatible
+        DTypePolicyClass = DTypePolicyCompat
+    except ImportError:
+        DTypePolicyClass = DTypePolicyCompat
+    
+    # Custom objects untuk load model dengan compatibility fixes
+    custom_objects = {
+        'InputLayer': CompatibleInputLayer,
+        'DTypePolicy': DTypePolicyClass,
+    }
     
     # Muat VGG16
     if os.path.exists(VGG16_MODEL_PATH):
