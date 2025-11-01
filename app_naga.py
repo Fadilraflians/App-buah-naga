@@ -613,16 +613,8 @@ def load_models():
     model_mobilenetv2 = None
 
     # Fix untuk compatibility issues dengan TensorFlow/Keras versi berbeda
-    # 1. batch_shape compatibility
-    class CompatibleInputLayer(tf.keras.layers.InputLayer):
-        """Custom InputLayer yang handle batch_shape untuk kompatibilitas"""
-        def __init__(self, **kwargs):
-            # Convert batch_shape [None, H, W, C] ke input_shape [H, W, C]
-            if 'batch_shape' in kwargs and 'input_shape' not in kwargs:
-                batch_shape = kwargs.pop('batch_shape')
-                if batch_shape and len(batch_shape) > 1:
-                    kwargs['input_shape'] = batch_shape[1:]  # Skip batch dimension (None)
-            super().__init__(**kwargs)
+    # PERBAIKAN: Jangan override InputLayer karena menyebabkan error 'as_list'
+    # Gunakan pendekatan yang lebih sederhana: hanya handle DTypePolicy
     
     # 2. DTypePolicy compatibility - handle Keras 3.x dtype policy
     # Keras 3.x menggunakan DTypePolicy, TensorFlow 2.x menggunakan string langsung
