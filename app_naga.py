@@ -613,8 +613,22 @@ def load_models():
     model_mobilenetv2 = None
 
     # Fix untuk compatibility issues dengan TensorFlow/Keras versi berbeda
-    # PERBAIKAN: Jangan override InputLayer karena menyebabkan error 'as_list'
-    # Gunakan pendekatan yang lebih sederhana: hanya handle DTypePolicy
+    
+    # 1. InputLayer compatibility - handle batch_shape untuk TensorFlow 2.15
+    # Model dibuat dengan batch_shape, tapi TF 2.15 tidak support
+    # Perlu custom InputLayer yang benar-benar compatible
+    class CompatibleInputLayer(tf.keras.layers.InputLayer):
+        """Custom InputLayer yang handle batch_shape dengan benar"""
+        @classmethod
+        def from_config(cls, config):
+            """Override from_config untuk handle batch_shape"""
+            # Convert batch_shape ke input_shape jika ada
+            if 'batch_shape' in config:
+                batch_shape = config.pop('batch_shape')
+                if batch_shape and len(batch_shape) > 1:
+                    # Skip batch dimension, ambil [H, W, C]
+                    config['input_shape'] = tuple(batch_shape[1:])
+            return super().from_config(config)
     
     # 2. DTypePolicy compatibility - handle Keras 3.x dtype policy
     # Keras 3.x menggunakan DTypePolicy, TensorFlow 2.x menggunakan string langsung
@@ -661,9 +675,10 @@ def load_models():
         DTypePolicyClass = DTypePolicyCompat
     
     # Custom objects untuk load model dengan compatibility fixes
-    # PERBAIKAN: Jangan include InputLayer karena menyebabkan error 'as_list'
-    # Hanya handle DTypePolicy
+    # PERBAIKAN: Gunakan CompatibleInputLayer yang handle batch_shape di from_config
+    # Ini lebih aman karena hanya override from_config, bukan __init__
     custom_objects = {
+        'InputLayer': CompatibleInputLayer,
         'DTypePolicy': DTypePolicyClass,
     }
     
