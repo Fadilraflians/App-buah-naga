@@ -1391,20 +1391,32 @@ if uploaded_file is not None:
                 
                 # Hanya override jika KEDUA model menunjukkan ketidakpastian yang SANGAT JELAS:
                 # Kriteria sangat ketat untuk memastikan tidak salah meng-override buah naga yang valid
+                # TAPI juga harus bisa mendeteksi gambar bukan buah naga
                 should_override_invalid = (
-                    # Kondisi 1: Keduanya confidence tinggi (>=85%) TAPI keduanya perbedaan SANGAT kecil (<55%)
+                    # Kondisi 1: Keduanya confidence tinggi (>=85%) TAPI keduanya perbedaan SANGAT kecil (<60%)
                     # DAN keduanya entropi tinggi (>35%) DAN keduanya ratio rendah (<5.0x)
                     (vgg16_confidence >= 85 and mobilenetv2_confidence >= 85 and
-                     vgg16_diff < 55 and mobilenetv2_diff < 55 and
+                     vgg16_diff < 60 and mobilenetv2_diff < 60 and
                      vgg16_entropy > max_entropy_val * 0.35 and mobilenetv2_entropy > max_entropy_val * 0.35 and
                      vgg16_ratio < 5.0 and mobilenetv2_ratio < 5.0)
-                    # Kondisi 2: Hasil BERBEDA DAN keduanya perbedaan SANGAT kecil (<40%) - ini indikator kuat bukan buah naga
+                    # Kondisi 2: Hasil BERBEDA - INDIKATOR SANGAT KUAT bukan buah naga
+                    # Jika kedua model memberikan hasil berbeda, kemungkinan besar bukan buah naga
+                    # PERKETAT: Naikkan threshold untuk perbedaan
                     or (vgg16_top_class_idx != mobilenetv2_top_class_idx and 
-                        vgg16_diff < 40 and mobilenetv2_diff < 40)
+                        # Jika hasil berbeda DAN perbedaan kecil (<50%) - model tidak yakin
+                        (vgg16_diff < 50 or mobilenetv2_diff < 50))
+                    # Kondisi 2b: BARU - Hasil berbeda DAN confidence tinggi (>85%)
+                    # Ini sangat tidak mungkin untuk buah naga yang valid
+                    or (vgg16_top_class_idx != mobilenetv2_top_class_idx and
+                        vgg16_confidence >= 85 and mobilenetv2_confidence >= 85)
+                    # Kondisi 2c: BARU - Hasil berbeda DAN keduanya perbedaan kecil (<55%)
+                    # Keduanya tidak yakin, tapi tetap pilih berbeda - jelas bukan buah naga
+                    or (vgg16_top_class_idx != mobilenetv2_top_class_idx and
+                        vgg16_diff < 55 and mobilenetv2_diff < 55)
                     # Kondisi 3: Keduanya confidence 75-85% DAN keduanya menunjukkan ketidakpastian tinggi
                     or (vgg16_confidence >= 75 and vgg16_confidence < 85 and
                         mobilenetv2_confidence >= 75 and mobilenetv2_confidence < 85 and
-                        vgg16_diff < 30 and mobilenetv2_diff < 30 and
+                        vgg16_diff < 35 and mobilenetv2_diff < 35 and
                         vgg16_entropy > max_entropy_val * 0.40 and mobilenetv2_entropy > max_entropy_val * 0.40)
                 )
                 
