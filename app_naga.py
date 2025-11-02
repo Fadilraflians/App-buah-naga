@@ -1025,45 +1025,58 @@ def predict_image_local(model, img_array, demo_mode=False, confidence_threshold=
                     required_diff = diff_threshold
                     break
             
-            # PERBAIKAN UTAMA: Untuk confidence 85-98%, menggunakan pendekatan yang lebih seimbang
-            # Default: Anggap valid jika confidence cukup tinggi, kecuali ada tanda jelas bukan buah naga
-            # Hanya anggap "Tidak Valid" jika ada INDIKATOR KUAT bahwa ini bukan buah naga:
+            # PERBAIKAN UTAMA: Untuk confidence 85-98%, menggunakan pendekatan yang LEBIH KETAT
+            # Untuk gambar bukan buah naga, model akan memberikan confidence tinggi karena
+            # model hanya dilatih untuk 3 kelas. Kita perlu threshold yang SANGAT KETAT.
             strict_validation_for_high_confidence = False
             if max_confidence >= 85 and max_confidence < 98:
-                # Untuk range ini, default adalah VALID kecuali ada tanda jelas bukan buah naga
-                # Tanda-tanda jelas bukan buah naga:
-                # 1. Perbedaan confidence SANGAT kecil (<50%) - model tidak yakin pada kelas manapun
-                # 2. ATAU entropi SANGAT tinggi (>45%) DAN perbedaan confidence kecil (<60%)
-                # 3. ATAU confidence ratio SANGAT rendah (<4.0x) DAN perbedaan confidence kecil (<60%)
+                # Untuk gambar bukan buah naga dengan confidence tinggi, model akan:
+                # 1. Confidence tinggi TAPI perbedaan antar kelas kecil (tidak yakin kelas mana)
+                # 2. Entropi tinggi (distribusi merata)
+                # 3. Confidence ratio rendah (kelas tertinggi tidak jauh di atas rata-rata)
                 
+                # THRESHOLD LEBIH KETAT: Untuk mendeteksi gambar bukan buah naga
                 is_clearly_not_dragon_fruit = (
-                    confidence_diff < 50  # Perbedaan sangat kecil - model tidak yakin
-                    or (entropy > max_entropy * 0.45 and confidence_diff < 60)  # Entropi tinggi + perbedaan kecil
-                    or (confidence_ratio < 4.0 and confidence_diff < 60)  # Ratio rendah + perbedaan kecil
+                    # Kondisi 1: Confidence tinggi TAPI perbedaan sangat kecil (<55%) - model bingung
+                    confidence_diff < 55
+                    # Kondisi 2: Entropi tinggi (>40%) DAN perbedaan kecil (<65%) - distribusi merata
+                    or (entropy > max_entropy * 0.40 and confidence_diff < 65)
+                    # Kondisi 3: Ratio rendah (<4.5x) DAN perbedaan kecil (<65%) - tidak dominan
+                    or (confidence_ratio < 4.5 and confidence_diff < 65)
+                    # Kondisi 4: Kombinasi: Entropi tinggi DAN ratio rendah - jelas bukan buah naga
+                    or (entropy > max_entropy * 0.38 and confidence_ratio < 5.0 and confidence_diff < 70)
                 )
                 
                 strict_validation_for_high_confidence = is_clearly_not_dragon_fruit
             
-            # Logika is_invalid: Hanya anggap tidak valid jika ada tanda jelas
-            # Untuk confidence >=75%, default adalah VALID kecuali ada tanda jelas bukan buah naga
-            # Untuk confidence <75%, gunakan threshold yang lebih ketat
+            # Logika is_invalid: Perketat deteksi untuk gambar bukan buah naga
+            # Untuk gambar bukan buah naga, model akan memberikan prediksi dengan:
+            # - Confidence mungkin tinggi TAPI perbedaan kecil (model tidak yakin kelas mana)
+            # - Entropi tinggi (distribusi merata ke semua kelas)
+            # - Ratio rendah (kelas tertinggi tidak jauh di atas rata-rata)
             strict_validation_for_medium_confidence = False
             if max_confidence >= 75 and max_confidence < 85:
-                # Untuk range 75-85%, default adalah VALID kecuali ada tanda jelas bukan buah naga
+                # Untuk range 75-85%, perketat deteksi
                 is_clearly_not_dragon_fruit_medium = (
-                    confidence_diff < 30  # Perbedaan sangat kecil - model tidak yakin
-                    or (entropy > max_entropy * 0.50 and confidence_diff < 40)  # Entropi tinggi + perbedaan kecil
-                    or (confidence_ratio < 3.0 and confidence_diff < 40)  # Ratio rendah + perbedaan kecil
+                    confidence_diff < 35  # Perbedaan sangat kecil - model tidak yakin
+                    or (entropy > max_entropy * 0.48 and confidence_diff < 45)  # Entropi tinggi + perbedaan kecil
+                    or (confidence_ratio < 3.5 and confidence_diff < 45)  # Ratio rendah + perbedaan kecil
+                    # Kombinasi: Entropi tinggi DAN ratio rendah
+                    or (entropy > max_entropy * 0.45 and confidence_ratio < 4.0 and confidence_diff < 50)
                 )
                 strict_validation_for_medium_confidence = is_clearly_not_dragon_fruit_medium
             
+            # Logika is_invalid: Perketat untuk semua range confidence
             is_invalid = (
-                max_confidence < 70  # Threshold absolut minimum
-                or (max_confidence < 75 and confidence_diff < required_diff)  # Untuk confidence <75%, perbedaan harus memenuhi threshold
-                or (max_confidence < 75 and entropy > max_entropy * 0.55)  # Untuk confidence <75%, entropi tidak boleh terlalu tinggi
-                or (max_confidence < 75 and confidence_ratio < 3.0)  # Untuk confidence <75%, ratio harus cukup tinggi
-                or strict_validation_for_medium_confidence  # Untuk confidence 75-85%, gunakan logika strict_validation_for_medium_confidence
-                or strict_validation_for_high_confidence  # Untuk confidence >=85%, gunakan logika strict_validation_for_high_confidence
+                max_confidence < 70  # Threshold absolut minimum - jelas tidak yakin
+                # Untuk confidence <75%, harus ada perbedaan jelas dan entropi rendah
+                or (max_confidence < 75 and confidence_diff < required_diff)
+                or (max_confidence < 75 and entropy > max_entropy * 0.55)
+                or (max_confidence < 75 and confidence_ratio < 3.2)
+                # Untuk confidence 75-85%, gunakan logika strict
+                or strict_validation_for_medium_confidence
+                # Untuk confidence >=85%, gunakan logika strict (LEBIH KETAT)
+                or strict_validation_for_high_confidence
             )
             
             if is_invalid:
