@@ -1013,9 +1013,9 @@ def predict_image_local(model, img_array, demo_mode=False, confidence_threshold=
             required_diff_for_valid = {
                 (70, 80): 35,    # Confidence 70-80%: perbedaan HARUS >35%
                 (80, 85): 45,    # Confidence 80-85%: perbedaan HARUS >45%
-                (85, 90): 70,    # SANGAT KETAT: Confidence 85-90%: perbedaan HARUS >70%
-                (90, 95): 75,    # SANGAT KETAT: Confidence 90-95%: perbedaan HARUS >75%
-                (95, 98): 80,    # SANGAT KETAT: Confidence 95-98%: perbedaan HARUS >80%
+                (85, 90): 75,    # SANGAT KETAT: Confidence 85-90%: perbedaan HARUS >75% (naik dari 70%)
+                (90, 95): 80,    # SANGAT KETAT: Confidence 90-95%: perbedaan HARUS >80% (naik dari 75%)
+                (95, 98): 85,    # SANGAT KETAT: Confidence 95-98%: perbedaan HARUS >85% (naik dari 80%)
             }
             
             # Tentukan threshold yang diperlukan berdasarkan confidence
@@ -1035,16 +1035,26 @@ def predict_image_local(model, img_array, demo_mode=False, confidence_threshold=
                 # 2. Entropi tinggi (distribusi merata)
                 # 3. Confidence ratio rendah (kelas tertinggi tidak jauh di atas rata-rata)
                 
-                # THRESHOLD LEBIH KETAT: Untuk mendeteksi gambar bukan buah naga
+                # THRESHOLD SANGAT KETAT: Untuk mendeteksi gambar bukan buah naga
+                # Untuk confidence 85-98%, jika gambar bukan buah naga:
+                # Model akan memberikan confidence tinggi TAPI dengan ketidakpastian tinggi
+                # (perbedaan kecil, entropi tinggi, ratio rendah)
                 is_clearly_not_dragon_fruit = (
-                    # Kondisi 1: Confidence tinggi TAPI perbedaan sangat kecil (<55%) - model bingung
-                    confidence_diff < 55
-                    # Kondisi 2: Entropi tinggi (>40%) DAN perbedaan kecil (<65%) - distribusi merata
-                    or (entropy > max_entropy * 0.40 and confidence_diff < 65)
-                    # Kondisi 3: Ratio rendah (<4.5x) DAN perbedaan kecil (<65%) - tidak dominan
-                    or (confidence_ratio < 4.5 and confidence_diff < 65)
-                    # Kondisi 4: Kombinasi: Entropi tinggi DAN ratio rendah - jelas bukan buah naga
-                    or (entropy > max_entropy * 0.38 and confidence_ratio < 5.0 and confidence_diff < 70)
+                    # Kondisi 1: Confidence tinggi TAPI perbedaan sangat kecil (<60%) - model bingung
+                    # PERKETAT: dari 55% menjadi 60%
+                    confidence_diff < 60
+                    # Kondisi 2: Entropi tinggi (>35%) DAN perbedaan kecil (<70%) - distribusi merata
+                    # PERKETAT: threshold entropi lebih rendah (35% vs 40%), diff threshold lebih tinggi (70% vs 65%)
+                    or (entropy > max_entropy * 0.35 and confidence_diff < 70)
+                    # Kondisi 3: Ratio rendah (<5.0x) DAN perbedaan kecil (<70%) - tidak dominan
+                    # PERKETAT: ratio threshold lebih tinggi (5.0 vs 4.5), diff threshold lebih tinggi (70% vs 65%)
+                    or (confidence_ratio < 5.0 and confidence_diff < 70)
+                    # Kondisi 4: Kombinasi: Entropi tinggi (>33%) DAN ratio rendah (<5.5x) DAN perbedaan kecil (<75%)
+                    # PERKETAT: semua threshold lebih ketat
+                    or (entropy > max_entropy * 0.33 and confidence_ratio < 5.5 and confidence_diff < 75)
+                    # Kondisi 5: BARU - Jika ratio sangat rendah (<4.0x) DAN perbedaan kecil (<80%)
+                    # Kelas tertinggi tidak cukup dominan - jelas bukan buah naga
+                    or (confidence_ratio < 4.0 and confidence_diff < 80)
                 )
                 
                 strict_validation_for_high_confidence = is_clearly_not_dragon_fruit
@@ -1058,11 +1068,11 @@ def predict_image_local(model, img_array, demo_mode=False, confidence_threshold=
             if max_confidence >= 75 and max_confidence < 85:
                 # Untuk range 75-85%, perketat deteksi
                 is_clearly_not_dragon_fruit_medium = (
-                    confidence_diff < 35  # Perbedaan sangat kecil - model tidak yakin
-                    or (entropy > max_entropy * 0.48 and confidence_diff < 45)  # Entropi tinggi + perbedaan kecil
-                    or (confidence_ratio < 3.5 and confidence_diff < 45)  # Ratio rendah + perbedaan kecil
+                    confidence_diff < 40  # Perketat: dari 35 menjadi 40 - perbedaan sangat kecil
+                    or (entropy > max_entropy * 0.45 and confidence_diff < 50)  # Perketat: entropi >45% DAN diff <50%
+                    or (confidence_ratio < 4.0 and confidence_diff < 50)  # Perketat: ratio <4.0 DAN diff <50%
                     # Kombinasi: Entropi tinggi DAN ratio rendah
-                    or (entropy > max_entropy * 0.45 and confidence_ratio < 4.0 and confidence_diff < 50)
+                    or (entropy > max_entropy * 0.42 and confidence_ratio < 4.5 and confidence_diff < 55)
                 )
                 strict_validation_for_medium_confidence = is_clearly_not_dragon_fruit_medium
             
