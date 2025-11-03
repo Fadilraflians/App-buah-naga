@@ -12,7 +12,7 @@ import io
 
 # Import Gemini dengan error handling
 try:
-    import google.generativeai as genai
+    import google.generativeai as genai  # type: ignore
     GEMINI_AVAILABLE = True
 except ImportError:
     GEMINI_AVAILABLE = False
@@ -58,6 +58,11 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# Tambahkan meta tag untuk mobile viewport
+st.markdown("""
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+""", unsafe_allow_html=True)
 
 # --- PERUBAHAN: Menggunakan Path Relatif untuk Cloud Deployment ---
 # Path otomatis detect dari lokasi file app_naga.py
@@ -147,33 +152,112 @@ st.markdown("""
     .stApp {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         min-height: 100vh;
+        padding-top: 0rem !important;
+    }
+    
+    /* Kurangi padding-top dari main content area */
+    .main {
+        padding-top: 0rem !important;
+        margin-top: 0rem !important;
+    }
+    
+    /* Hapus margin atas dari element pertama */
+    .main .block-container > div:first-child {
+        margin-top: 0rem !important;
+        padding-top: 0rem !important;
+    }
+    
+    /* Override margin dari Streamlit default */
+    div[data-testid="stVerticalBlock"] > div:first-child {
+        margin-top: 0rem !important;
+    }
+    
+    /* Override element-container margin */
+    .element-container:first-child {
+        margin-top: 0rem !important;
+        padding-top: 0rem !important;
+    }
+    
+    /* Override stMarkdown margin untuk header pertama */
+    .stMarkdown:first-child h1 {
+        margin-top: 0rem !important;
+    }
+    
+    /* Override margin dari semua element di dalam block-container yang pertama */
+    .main .block-container > *:first-child {
+        margin-top: 0rem !important;
+        padding-top: 0rem !important;
     }
     
     /* Container utama */
     .main .block-container {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         border-radius: 20px;
-        padding: 2rem;
-        margin: 1rem;
+        padding: 0.5rem 2rem;
+        margin: 0rem 1rem !important;
+        margin-top: 0rem !important;
         box-shadow: 0 20px 40px rgba(0,0,0,0.3);
         backdrop-filter: blur(10px);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
     }
     
-    /* Sidebar styling */
+    /* Saat sidebar tertutup - konten terpusat dengan max-width yang wajar */
+    section[data-testid="stSidebar"][aria-hidden="true"] ~ .main .block-container {
+        margin-left: auto !important;
+        margin-right: auto !important;
+        margin-top: 0rem !important;
+        margin-bottom: 1rem !important;
+        padding-top: 0.5rem !important;
+        padding-bottom: 2rem !important;
+        padding-left: 2rem !important;
+        padding-right: 2rem !important;
+        max-width: 1200px !important;
+        width: calc(100% - 4rem) !important;
+    }
+    
+    /* Sidebar styling - Pastikan sidebar selalu terlihat dengan animasi */
+    section[data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #2C3E50 0%, #34495E 100%) !important;
+        min-width: 250px !important;
+        transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                    opacity 0.3s ease,
+                    box-shadow 0.3s ease,
+                    margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3) !important;
+    }
+    
+    /* Sidebar saat terbuka - tambahkan efek glow */
+    section[data-testid="stSidebar"]:not([aria-hidden="true"]) {
+        box-shadow: 4px 0 30px rgba(78, 205, 196, 0.3) !important;
+    }
+    
+    /* Sidebar saat tertutup */
+    section[data-testid="stSidebar"][aria-hidden="true"] {
+        transform: translateX(-100%) !important;
+    }
+    
     .css-1d391kg {
         background: linear-gradient(180deg, #2C3E50 0%, #34495E 100%);
+    }
+    
+    /* Sejajarkan konten utama dengan kartu Informasi Model di sidebar */
+    /* Sidebar biasanya memiliki padding-top sekitar 1rem, kartu Informasi Model ada di posisi pertama */
+    section[data-testid="stSidebar"] .element-container:first-child {
+        padding-top: 1rem;
     }
     
     .main-header {
         font-size: 3.5rem;
         font-weight: bold;
         text-align: center;
-        background: linear-gradient(45deg, #FF6B6B, #4ECDC4, #45B7D1);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        margin-bottom: 2rem;
+        color: #90EE90;
+        margin-top: 0rem !important;
+        margin-bottom: 0.5rem !important;
         text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
     }
     
     .sub-header {
@@ -342,15 +426,342 @@ st.markdown("""
     /* Hide Streamlit branding */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
-    header {visibility: hidden;}
+    /* Jangan sembunyikan header - butuh untuk tombol toggle sidebar */
+    /* header {visibility: hidden;} */
+    
+    /* Styling untuk tombol toggle sidebar agar lebih terlihat */
+    header[data-testid="stHeader"] {
+        background: transparent !important;
+        position: relative !important;
+        z-index: 1000 !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        margin: 0 !important;
+    }
+    
+    /* Container untuk tombol toggle sidebar - geser ke pojok kiri tanpa celah */
+    div[data-testid="stToolbar"],
+    header[data-testid="stHeader"] > div:first-child,
+    header[data-testid="stHeader"] > div {
+        justify-content: flex-start !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        width: 100% !important;
+    }
+    
+    /* Force header content ke pojok kiri tanpa celah */
+    header[data-testid="stHeader"] {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    
+    /* Tombol toggle sidebar (hamburger menu) - Pojok kiri TANPA CELAH */
+    button[data-testid="baseButton-header"] {
+        background: linear-gradient(135deg, #4ECDC4 0%, #45B7D1 50%, #4ECDC4 100%) !important;
+        background-size: 200% 200% !important;
+        color: white !important;
+        border: 3px solid rgba(255, 255, 255, 0.3) !important;
+        border-radius: 12px !important;
+        padding: 0.75rem !important;
+        min-width: 60px !important;
+        min-height: 60px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        box-shadow: 0 6px 20px rgba(78, 205, 196, 0.4), 
+                    0 0 20px rgba(78, 205, 196, 0.2) !important;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        cursor: pointer !important;
+        position: relative !important;
+        overflow: hidden !important;
+        animation: pulseGlow 2s ease-in-out infinite !important;
+        margin-left: 0 !important;
+        margin-right: auto !important;
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+    }
+    
+    /* Saat sidebar tertutup - geser tombol ke pojok kiri TANPA CELAH */
+    section[data-testid="stSidebar"][aria-hidden="true"] ~ header[data-testid="stHeader"] button[data-testid="baseButton-header"] {
+        margin-left: 0 !important;
+        margin-right: auto !important;
+    }
+    
+    /* Pastikan header toolbar align ke pojok kiri TANPA CELAH */
+    header[data-testid="stHeader"] > div:first-child {
+        display: flex !important;
+        justify-content: flex-start !important;
+        align-items: center !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        width: 100% !important;
+    }
+    
+    /* Hapus semua spacing tambahan - TANPA CELAH SAMA SEKALI */
+    header[data-testid="stHeader"] > div:first-child > *:first-child,
+    header[data-testid="stHeader"] button[data-testid="baseButton-header"],
+    div[data-testid="stToolbar"] > *:first-child {
+        margin-left: 0 !important;
+        padding-left: 0 !important;
+    }
+    
+    /* Pastikan semua child elements tidak punya margin/padding kiri */
+    header[data-testid="stHeader"] * {
+        margin-left: 0 !important;
+    }
+    
+    /* Exception: biarkan tombol punya margin-right untuk spacing internal */
+    header[data-testid="stHeader"] button[data-testid="baseButton-header"] {
+        margin-left: 0 !important;
+        margin-right: auto !important;
+    }
+    
+    /* AGRESIF: Paksa tombol ke pojok kiri dengan absolute positioning jika perlu */
+    header[data-testid="stHeader"] {
+        position: relative !important;
+    }
+    
+    /* Pastikan container header tidak punya padding/margin apapun */
+    header[data-testid="stHeader"],
+    header[data-testid="stHeader"] > div,
+    header[data-testid="stHeader"] > div > div {
+        padding-left: 0 !important;
+        margin-left: 0 !important;
+    }
+    
+    /* Pastikan header container bisa menampung tombol absolute */
+    header[data-testid="stHeader"] > div:first-child {
+        position: relative !important;
+        min-height: 60px !important;
+    }
+    
+    /* Force tombol ke pojok kiri TANPA CELAH dengan absolute positioning */
+    header[data-testid="stHeader"] button[data-testid="baseButton-header"],
+    button[data-testid="baseButton-header"] {
+        position: absolute !important;
+        left: 0 !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        margin: 0 !important;
+        padding-left: 0.25rem !important;
+        padding-right: 0.75rem !important;
+        z-index: 10000 !important;
+        order: -999 !important;
+        flex-shrink: 0 !important;
+    }
+    
+    
+    /* Animasi pulse glow untuk menarik perhatian */
+    @keyframes pulseGlow {
+        0%, 100% {
+            box-shadow: 0 6px 20px rgba(78, 205, 196, 0.4), 
+                        0 0 20px rgba(78, 205, 196, 0.2);
+        }
+        50% {
+            box-shadow: 0 6px 25px rgba(78, 205, 196, 0.6), 
+                        0 0 30px rgba(78, 205, 196, 0.4);
+        }
+    }
+    
+    /* Animasi gradient background */
+    @keyframes gradientShift {
+        0% {
+            background-position: 0% 50%;
+        }
+        50% {
+            background-position: 100% 50%;
+        }
+        100% {
+            background-position: 0% 50%;
+        }
+    }
+    
+    /* Hover effect - lebih dramatis dengan absolute positioning */
+    button[data-testid="baseButton-header"]:hover {
+        background: linear-gradient(135deg, #45B7D1 0%, #4ECDC4 50%, #45B7D1 100%) !important;
+        background-size: 200% 200% !important;
+        animation: gradientShift 1.5s ease infinite, pulseGlow 1.5s ease-in-out infinite !important;
+        transform: translateY(-50%) scale(1.15) rotate(5deg) !important;
+        box-shadow: 0 8px 30px rgba(78, 205, 196, 0.7), 
+                    0 0 40px rgba(78, 205, 196, 0.5),
+                    inset 0 0 20px rgba(255, 255, 255, 0.2) !important;
+        border-color: rgba(255, 255, 255, 0.6) !important;
+        left: 0 !important;
+    }
+    
+    /* Active/pressed effect dengan absolute positioning */
+    button[data-testid="baseButton-header"]:active {
+        transform: translateY(-50%) scale(1.05) rotate(-5deg) !important;
+        box-shadow: 0 4px 15px rgba(78, 205, 196, 0.5), 
+                    inset 0 2px 10px rgba(0, 0, 0, 0.2) !important;
+        transition: all 0.1s ease !important;
+        left: 0 !important;
+    }
+    
+    /* Ripple effect background */
+    button[data-testid="baseButton-header"]::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+        transform: translate(-50%, -50%);
+        transition: width 0.6s, height 0.6s;
+    }
+    
+    button[data-testid="baseButton-header"]:hover::before {
+        width: 300px;
+        height: 300px;
+    }
+    
+    /* Icon hamburger di tombol - lebih besar dan jelas */
+    button[data-testid="baseButton-header"] svg {
+        fill: white !important;
+        width: 32px !important;
+        height: 32px !important;
+        transition: transform 0.3s ease !important;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3)) !important;
+        z-index: 1 !important;
+        position: relative !important;
+    }
+    
+    /* Animasi rotasi icon saat hover */
+    button[data-testid="baseButton-header"]:hover svg {
+        transform: rotate(90deg) scale(1.1) !important;
+    }
     
     /* Remove white spaces and improve spacing */
     .stApp > div {
         background: transparent;
     }
     
+    /* Main content container - smooth transition saat sidebar buka/tutup */
     .main .block-container {
         max-width: 1200px;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        /* Biarkan Streamlit mengatur margin secara dinamis untuk pergeseran */
+    }
+    
+    /* Saat sidebar tertutup - pastikan main area tidak ada margin kiri berlebihan */
+    section[data-testid="stSidebar"][aria-hidden="true"] ~ .main {
+        margin-left: 0 !important;
+        padding-left: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        left: 0 !important;
+    }
+    
+    /* Saat sidebar tertutup - pastikan konten benar-benar mulai dari kiri */
+    section[data-testid="stSidebar"][aria-hidden="true"] ~ .main > div {
+        margin-left: 0 !important;
+        padding-left: 0 !important;
+    }
+    
+    /* Pastikan block-container benar-benar mulai dari kiri tanpa margin */
+    section[data-testid="stSidebar"][aria-hidden="true"] ~ .main .block-container {
+        margin-left: 0 !important;
+    }
+    
+    /* Main content area - smooth transition - Streamlit otomatis set margin-left */
+    .main {
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        /* Biarkan Streamlit mengatur margin-left secara dinamis */
+    }
+    
+    /* Pastikan saat sidebar tertutup, konten bergeser sepenuhnya ke kiri */
+    section[data-testid="stSidebar"][aria-hidden="true"] ~ * {
+        margin-left: 0 !important;
+    }
+    
+    /* Override: Pastikan block-container mulai dari kiri saat sidebar tertutup */
+    section[data-testid="stSidebar"][aria-hidden="true"] ~ .main .block-container {
+        margin-left: 0 !important;
+        padding-left: 1.5rem !important;
+        width: calc(100% - 3rem) !important;
+        max-width: none !important;
+    }
+    
+    /* Pastikan tidak ada spacing tambahan dari Streamlit */
+    section[data-testid="stSidebar"][aria-hidden="true"] ~ section[data-testid="stMain"] {
+        margin-left: 0 !important;
+        padding-left: 0 !important;
+    }
+    
+    /* Agresif: Hapus semua margin kiri dari parent elements saat sidebar tertutup (tapi biarkan padding untuk readability) */
+    section[data-testid="stSidebar"][aria-hidden="true"] ~ .main {
+        margin-left: 0 !important;
+    }
+    
+    section[data-testid="stSidebar"][aria-hidden="true"] ~ .main > div {
+        margin-left: 0 !important;
+    }
+    
+    /* Pastikan element pertama di main content tidak punya margin kiri */
+    section[data-testid="stSidebar"][aria-hidden="true"] ~ .main > div:first-child {
+        margin-left: 0 !important;
+        padding-left: 0 !important;
+    }
+    
+    /* Header title - smooth transition dan ikut bergeser dengan konten */
+    .main-header {
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        text-align: center !important;
+        /* Header akan ikut bergeser karena berada dalam .main yang sudah memiliki transition */
+    }
+    
+    /* Pastikan semua elemen konten memiliki transisi smooth */
+    .element-container,
+    .stMarkdown,
+    .stColumns,
+    [data-testid="column"],
+    section.main > div {
+        transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                    transform 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+    
+    /* Pastikan semua elemen di main content bergeser dengan smooth */
+    .info-box,
+    .metric-card,
+    .prediction-result,
+    .footer-box {
+        transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                    transform 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+    
+    /* Memastikan app content area responsive terhadap sidebar dengan smooth transition */
+    div[data-testid="stAppViewContainer"] {
+        transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+    
+    /* Saat sidebar tertutup - pastikan app view container tidak punya margin kiri */
+    section[data-testid="stSidebar"][aria-hidden="true"] ~ div[data-testid="stAppViewContainer"] {
+        margin-left: 0 !important;
+        padding-left: 0 !important;
+        width: 100% !important;
+        left: 0 !important;
+    }
+    
+    /* Saat sidebar tertutup - pastikan semua elemen di dalam app view container mulai dari kiri */
+    section[data-testid="stSidebar"][aria-hidden="true"] ~ div[data-testid="stAppViewContainer"] > div {
+        margin-left: 0 !important;
+        padding-left: 0 !important;
+    }
+    
+    /* Pastikan tidak ada transform atau positioning yang membuat celah */
+    section[data-testid="stSidebar"][aria-hidden="true"] ~ .main {
+        transform: translateX(0) !important;
+    }
+    
+    /* Memastikan semua elemen Streamlit memiliki transisi */
+    section[data-testid="stSidebar"] ~ * {
+        transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
     }
     
     /* Improve sidebar */
@@ -471,6 +882,579 @@ st.markdown("""
         border-radius: 10px !important;
         padding: 1rem !important;
         margin: 0.5rem 0 !important;
+    }
+    
+    /* ============================================================================
+       RESPONSIVE DESIGN UNTUK MOBILE
+       ============================================================================ */
+    
+    /* Mobile devices (max-width: 768px) */
+    @media (max-width: 768px) {
+        /* Header utama - perbesar font untuk mobile */
+        .main-header {
+            font-size: 2rem !important;
+            margin-bottom: 0.5rem !important;
+        }
+        
+        /* Sub header */
+        .sub-header {
+            font-size: 1.3rem !important;
+            margin-top: 1rem !important;
+            margin-bottom: 0.5rem !important;
+        }
+        
+        /* Container utama - kurangi padding untuk mobile */
+        .main .block-container {
+            padding: 1rem !important;
+            margin: 0.5rem !important;
+            border-radius: 15px !important;
+        }
+        
+        /* Info box - perbesar padding dan font */
+        .info-box,
+        .success-box,
+        .warning-box {
+            padding: 1rem !important;
+            margin: 0.75rem 0 !important;
+            font-size: 0.95rem !important;
+        }
+        
+        .info-box h3,
+        .info-box h4,
+        .success-box h4,
+        .warning-box h4 {
+            font-size: 1.1rem !important;
+            margin-bottom: 0.5rem !important;
+        }
+        
+        .info-box p,
+        .info-box li,
+        .success-box p,
+        .warning-box p {
+            font-size: 0.9rem !important;
+            line-height: 1.5 !important;
+        }
+        
+        /* Metric cards - full width di mobile */
+        .metric-card {
+            padding: 1.5rem !important;
+            margin: 0.75rem 0 !important;
+        }
+        
+        .metric-card h3 {
+            font-size: 1.2rem !important;
+        }
+        
+        .metric-card h2 {
+            font-size: 1.8rem !important;
+        }
+        
+        .metric-container {
+            padding: 0.75rem !important;
+            margin: 0.5rem 0 !important;
+        }
+        
+        .metric-container h4 {
+            font-size: 0.95rem !important;
+        }
+        
+        .metric-container h2 {
+            font-size: 1.5rem !important;
+        }
+        
+        .metric-container h3 {
+            font-size: 1.2rem !important;
+        }
+        
+        /* Prediction result - perbesar font untuk mobile */
+        .prediction-result {
+            padding: 1.5rem !important;
+            margin: 0.75rem 0 !important;
+        }
+        
+        .prediction-result h2 {
+            font-size: 1.5rem !important;
+        }
+        
+        .prediction-result h3 {
+            font-size: 1.2rem !important;
+        }
+        
+        .prediction-result p {
+            font-size: 0.9rem !important;
+        }
+        
+        /* Upload area - perbesar untuk touch target */
+        .stFileUploader > div > div {
+            padding: 1.5rem !important;
+        }
+        
+        /* Sidebar - overlay style di mobile untuk responsif */
+        section[data-testid="stSidebar"] {
+            position: fixed !important;
+            z-index: 999 !important;
+            width: 85% !important;
+            max-width: 300px !important;
+            height: 100vh !important;
+            top: 0 !important;
+            left: 0 !important;
+            box-shadow: 4px 0 30px rgba(0, 0, 0, 0.5) !important;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+        
+        /* Sidebar tertutup di mobile - sembunyikan ke kiri */
+        section[data-testid="stSidebar"][aria-hidden="true"] {
+            transform: translateX(-100%) !important;
+        }
+        
+        /* Sidebar terbuka di mobile */
+        section[data-testid="stSidebar"]:not([aria-hidden="true"]) {
+            transform: translateX(0) !important;
+        }
+        
+        /* Backdrop overlay saat sidebar terbuka di mobile */
+        section[data-testid="stSidebar"]:not([aria-hidden="true"])::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 998;
+            pointer-events: auto;
+        }
+        
+        /* Sidebar styling di mobile */
+        .css-1d391kg {
+            width: 85% !important;
+            max-width: 300px !important;
+        }
+        
+        /* Main content saat sidebar terbuka di mobile */
+        section[data-testid="stSidebar"]:not([aria-hidden="true"]) ~ .main {
+            margin-left: 0 !important;
+            filter: blur(0) !important;
+        }
+        
+        /* Tombol close sidebar di mobile - tetap di pojok kiri */
+        section[data-testid="stSidebar"]:not([aria-hidden="true"]) button[data-testid="baseButton-header"] {
+            position: absolute !important;
+            z-index: 10001 !important;
+            top: 50% !important;
+            left: 0 !important;
+            transform: translateY(-50%) !important;
+            background: rgba(78, 205, 196, 0.9) !important;
+            margin: 0 !important;
+            padding-left: 0.25rem !important;
+        }
+        
+        /* Tombol toggle sidebar - pastikan tetap terlihat dan cukup besar untuk mobile */
+        button[data-testid="baseButton-header"] {
+            position: absolute !important;
+            left: 0 !important;
+            top: 50% !important;
+            transform: translateY(-50%) !important;
+            min-width: 50px !important;
+            min-height: 50px !important;
+            padding: 0.75rem !important;
+            border-width: 2px !important;
+            animation: pulseGlow 2.5s ease-in-out infinite !important;
+            margin: 0 !important;
+            padding-left: 0.25rem !important;
+            z-index: 10000 !important;
+        }
+        
+        button[data-testid="baseButton-header"]:hover {
+            transform: translateY(-50%) scale(1.1) !important;
+            left: 0 !important;
+        }
+        
+        button[data-testid="baseButton-header"]:active {
+            transform: translateY(-50%) scale(1.05) !important;
+            left: 0 !important;
+        }
+        
+        button[data-testid="baseButton-header"] svg {
+            width: 28px !important;
+            height: 28px !important;
+        }
+        
+        button[data-testid="baseButton-header"]:hover svg {
+            transform: rotate(90deg) scale(1.05) !important;
+        }
+        
+        /* Sidebar text lebih kecil di mobile */
+        .css-1d391kg h2 {
+            font-size: 1.2rem !important;
+        }
+        
+        .css-1d391kg h3 {
+            font-size: 1rem !important;
+        }
+        
+        .css-1d391kg h4 {
+            font-size: 0.9rem !important;
+        }
+        
+        .css-1d391kg p {
+            font-size: 0.85rem !important;
+        }
+        
+        /* Sidebar padding lebih kecil */
+        .css-1d391kg .element-container {
+            padding: 0.5rem 0 !important;
+        }
+        
+        /* Tab styling untuk mobile */
+        .stTabs [data-baseweb="tab-list"] {
+            padding: 0.25rem !important;
+        }
+        
+        .stTabs [data-baseweb="tab"] {
+            font-size: 0.85rem !important;
+            padding: 0.5rem 0.75rem !important;
+        }
+        
+        /* Button - perbesar untuk mobile touch */
+        .stButton > button {
+            padding: 0.75rem 1.5rem !important;
+            font-size: 1rem !important;
+            min-height: 44px !important; /* Minimum touch target size */
+        }
+        
+        /* Footer */
+        .footer-box {
+            padding: 1.5rem !important;
+            margin-top: 1rem !important;
+        }
+        
+        .footer-box h3 {
+            font-size: 1.3rem !important;
+        }
+        
+        .footer-box p {
+            font-size: 0.9rem !important;
+        }
+        
+        /* Text umum - perbesar untuk readability */
+        .stApp .stMarkdown {
+            font-size: 0.95rem !important;
+        }
+        
+        .stApp .stMarkdown h1 {
+            font-size: 1.8rem !important;
+        }
+        
+        .stApp .stMarkdown h2 {
+            font-size: 1.4rem !important;
+        }
+        
+        .stApp .stMarkdown h3 {
+            font-size: 1.2rem !important;
+        }
+        
+        /* Radio buttons - perbesar spacing */
+        .stRadio > div {
+            gap: 0.5rem !important;
+        }
+        
+        .stRadio label {
+            font-size: 1rem !important;
+            padding: 0.75rem !important;
+        }
+        
+        /* File uploader label */
+        .stFileUploader label {
+            font-size: 1rem !important;
+        }
+        
+        /* Image display */
+        .stImage img {
+            border-radius: 10px !important;
+        }
+        
+        /* Code blocks */
+        .stCode {
+            padding: 0.75rem !important;
+            font-size: 0.85rem !important;
+            overflow-x: auto !important;
+        }
+        
+        /* Heatmap caption */
+        .stImage > div > div {
+            font-size: 0.85rem !important;
+        }
+        
+        /* Spinner text */
+        .stSpinner > div {
+            font-size: 1rem !important;
+        }
+        
+        /* Tables - scroll horizontal di mobile */
+        .stDataFrame,
+        table {
+            overflow-x: auto !important;
+            display: block !important;
+            width: 100% !important;
+        }
+        
+        /* Charts - full width di mobile */
+        .stPyplot {
+            width: 100% !important;
+        }
+        
+        /* Input fields - perbesar di mobile */
+        .stTextInput > div > div > input,
+        .stTextArea > div > div > textarea {
+            font-size: 16px !important; /* Prevent zoom on iOS */
+            padding: 0.75rem !important;
+        }
+        
+        /* Selectbox dan dropdown */
+        .stSelectbox > div > div {
+            font-size: 1rem !important;
+        }
+        
+        /* Camera input */
+        .stCameraInput {
+            width: 100% !important;
+        }
+        
+        /* Image containers */
+        [data-testid="stImage"] {
+            width: 100% !important;
+        }
+        
+        /* Metric display - stack vertically */
+        .element-container [data-testid="metric-container"] {
+            margin: 0.5rem 0 !important;
+        }
+    }
+    
+    /* Small mobile devices (max-width: 480px) */
+    @media (max-width: 480px) {
+        .main-header {
+            font-size: 1.5rem !important;
+        }
+        
+        .sub-header {
+            font-size: 1.1rem !important;
+        }
+        
+        .main .block-container {
+            padding: 0.75rem !important;
+            margin: 0.25rem !important;
+        }
+        
+        .metric-card {
+            padding: 1rem !important;
+        }
+        
+        .prediction-result {
+            padding: 1rem !important;
+        }
+        
+        .prediction-result h2 {
+            font-size: 1.2rem !important;
+        }
+        
+        .info-box,
+        .success-box,
+        .warning-box {
+            padding: 0.75rem !important;
+        }
+        
+        /* Sidebar - full width di mobile kecil */
+        section[data-testid="stSidebar"] {
+            width: 90% !important;
+            max-width: 280px !important;
+        }
+        
+        .css-1d391kg {
+            width: 90% !important;
+            max-width: 280px !important;
+        }
+        
+        /* Column layout - stack vertically di mobile kecil */
+        .stColumns > div {
+            width: 100% !important;
+            margin-bottom: 1rem !important;
+        }
+        
+        /* Force columns to stack pada mobile */
+        [data-testid="column"] {
+            min-width: 100% !important;
+            width: 100% !important;
+        }
+        
+        /* Radio button horizontal menjadi vertical di mobile */
+        [data-testid="stHorizontalBlock"] {
+            flex-direction: column !important;
+        }
+        
+        [data-testid="stHorizontalBlock"] > div {
+            width: 100% !important;
+            margin-bottom: 0.5rem !important;
+        }
+    }
+    
+    /* Tablet devices (min-width: 481px, max-width: 1024px) */
+    @media (min-width: 481px) and (max-width: 1024px) {
+        .main-header {
+            font-size: 2.5rem !important;
+        }
+        
+        .sub-header {
+            font-size: 1.5rem !important;
+        }
+        
+        .main .block-container {
+            padding: 1.5rem !important;
+            margin: 0.75rem !important;
+        }
+        
+        /* Sidebar - overlay style untuk tablet juga */
+        section[data-testid="stSidebar"] {
+            position: fixed !important;
+            z-index: 999 !important;
+            width: 70% !important;
+            max-width: 350px !important;
+            height: 100vh !important;
+            box-shadow: 4px 0 30px rgba(0, 0, 0, 0.5) !important;
+        }
+        
+        /* Sidebar tertutup di tablet */
+        section[data-testid="stSidebar"][aria-hidden="true"] {
+            transform: translateX(-100%) !important;
+        }
+        
+        /* Backdrop overlay untuk tablet */
+        section[data-testid="stSidebar"]:not([aria-hidden="true"])::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 998;
+            pointer-events: auto;
+        }
+        
+        .css-1d391kg {
+            width: 70% !important;
+            max-width: 350px !important;
+        }
+    }
+    
+    /* Desktop - pastikan sidebar tidak overlay (normal behavior) */
+    @media (min-width: 1025px) {
+        section[data-testid="stSidebar"] {
+            position: relative !important;
+            transform: none !important;
+            height: auto !important;
+        }
+        
+        section[data-testid="stSidebar"]:not([aria-hidden="true"])::before {
+            display: none !important;
+        }
+    }
+    
+    /* Touch-friendly improvements untuk semua mobile */
+    @media (hover: none) and (pointer: coarse) {
+        /* Perbesar semua clickable elements */
+        .stButton > button,
+        .stFileUploader button,
+        .stRadio label,
+        .stCheckbox label {
+            min-height: 44px !important;
+            min-width: 44px !important;
+        }
+        
+        /* Hapus hover effects di touch devices */
+        .stButton > button:hover,
+        .stFileUploader button:hover {
+            transform: none !important;
+        }
+    }
+    
+    /* ============================================================================
+       STYLING EXPANDER UNTUK TOGGLE BUTTON
+       ============================================================================ */
+    
+    /* Expander header - make it more clickable and visible */
+    [data-baseweb="accordion"] {
+        background: transparent !important;
+    }
+    
+    /* Expander button/toggle area */
+    [data-baseweb="accordion"] button {
+        background: linear-gradient(135deg, #2C3E50 0%, #34495E 100%) !important;
+        color: white !important;
+        border: 2px solid #4ECDC4 !important;
+        border-radius: 10px !important;
+        padding: 1rem !important;
+        width: 100% !important;
+        cursor: pointer !important;
+        font-weight: 600 !important;
+        font-size: 1.1rem !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    [data-baseweb="accordion"] button:hover {
+        background: linear-gradient(135deg, #34495E 0%, #2C3E50 100%) !important;
+        border-color: #4ECDC4 !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 8px rgba(78, 205, 196, 0.3) !important;
+    }
+    
+    /* Expander icon (arrow) */
+    [data-baseweb="accordion"] svg {
+        color: #4ECDC4 !important;
+        fill: #4ECDC4 !important;
+    }
+    
+    /* Expander content area */
+    [data-baseweb="accordion"] > div[aria-expanded="true"] {
+        background: transparent !important;
+        padding: 0.5rem 0 !important;
+    }
+    
+    /* Make sure expander is clickable */
+    [data-baseweb="accordion"] button,
+    [data-baseweb="accordion"] button > div {
+        pointer-events: auto !important;
+        cursor: pointer !important;
+        z-index: 10 !important;
+        position: relative !important;
+    }
+    
+    /* Sidebar expander specific styling */
+    .css-1d391kg [data-baseweb="accordion"] button {
+        margin-bottom: 0.5rem !important;
+    }
+    
+    /* Ensure expander content is visible */
+    [data-baseweb="accordion"] > div {
+        overflow: visible !important;
+    }
+    
+    /* Fix for sidebar expander - ensure it works */
+    section[data-testid="stSidebar"] [data-baseweb="accordion"] {
+        margin-bottom: 1rem !important;
+    }
+    
+    section[data-testid="stSidebar"] [data-baseweb="accordion"] button {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+    }
+    
+    /* Make expander text clearly visible */
+    [data-baseweb="accordion"] button span {
+        color: white !important;
+        font-weight: 600 !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -833,58 +1817,85 @@ model_vgg16, model_mobilenetv2 = load_models()
 # ==============================================================================
 
 with st.sidebar:
+    # Gunakan session state untuk toggle expand/collapse
+    if 'show_model_info' not in st.session_state:
+        st.session_state.show_model_info = True
+    
+    # Header dengan toggle button yang jelas terlihat
+    toggle_icon = "🔽 Tutup" if st.session_state.show_model_info else "▶️ Buka"
+    
+    # Header dengan toggle button yang jelas terlihat
     st.markdown("""
-    <div style="background: linear-gradient(135deg, #2C3E50 0%, #34495E 100%); padding: 1rem; border-radius: 15px; margin-bottom: 1rem;">
+    <div style="background: linear-gradient(135deg, #2C3E50 0%, #34495E 100%); 
+                padding: 1rem; border-radius: 15px; margin-bottom: 1rem;
+                border: 2px solid #4ECDC4;">
         <h2 style="color: white; text-align: center; margin: 0;">📊 Informasi Model</h2>
     </div>
-    """, unsafe_allow_html=True) # Mengganti judul
+    """, unsafe_allow_html=True)
     
-    if model_performance_metrics:
-        # Gunakan .get() untuk menghindari KeyError
-        sidebar_vgg16_accuracy = model_performance_metrics.get('vgg16', {}).get('accuracy', 0.0)
-        sidebar_vgg16_size = model_performance_metrics.get('vgg16', {}).get('model_size_mb', 0.0)
-        sidebar_mobilenetv2_accuracy = model_performance_metrics.get('mobilenetv2', {}).get('accuracy', 0.0)
-        sidebar_mobilenetv2_size = model_performance_metrics.get('mobilenetv2', {}).get('model_size_mb', 0.0)
-        
-        st.markdown("### 🎯 Akurasi Model (dari Pelatihan)")
-        col1, col2 = st.columns(2)
-        with col1:
-            st.markdown(f"""
-            <div class="metric-container">
-                <h4 style="color: #4ECDC4; margin: 0;">VGG16</h4>
-                <h2 style="color: #FF6B6B; margin: 0;">{sidebar_vgg16_accuracy:.1%}</h2>
+    # Label untuk tombol (agar jelas)
+    st.markdown(f"**Status:** {'Terbuka' if st.session_state.show_model_info else 'Tertutup'}")
+    
+    # Tombol toggle - sederhana dan pasti muncul
+    toggle_clicked = st.button(
+        toggle_icon, 
+        key="toggle_model_info",
+        help="Klik untuk membuka/menutup informasi model",
+        use_container_width=True
+    )
+    
+    if toggle_clicked:
+        st.session_state.show_model_info = not st.session_state.show_model_info
+        st.rerun()
+    
+    # Tampilkan konten jika expanded
+    if st.session_state.show_model_info:
+        if model_performance_metrics:
+            # Gunakan .get() untuk menghindari KeyError
+            sidebar_vgg16_accuracy = model_performance_metrics.get('vgg16', {}).get('accuracy', 0.0)
+            sidebar_vgg16_size = model_performance_metrics.get('vgg16', {}).get('model_size_mb', 0.0)
+            sidebar_mobilenetv2_accuracy = model_performance_metrics.get('mobilenetv2', {}).get('accuracy', 0.0)
+            sidebar_mobilenetv2_size = model_performance_metrics.get('mobilenetv2', {}).get('model_size_mb', 0.0)
+            
+            st.markdown("### 🎯 Akurasi Model (dari Pelatihan)")
+            col1, col2 = st.columns(2)
+            with col1:
+                st.markdown(f"""
+                <div class="metric-container">
+                    <h4 style="color: #4ECDC4; margin: 0;">VGG16</h4>
+                    <h2 style="color: #FF6B6B; margin: 0;">{sidebar_vgg16_accuracy:.1%}</h2>
+                </div>
+                """, unsafe_allow_html=True)
+            with col2:
+                st.markdown(f"""
+                <div class="metric-container">
+                    <h4 style="color: #4ECDC4; margin: 0;">MobileNetV2</h4>
+                    <h2 style="color: #FF6B6B; margin: 0;">{sidebar_mobilenetv2_accuracy:.1%}</h2>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            st.markdown("### 📏 Ukuran Model (dari Pelatihan)")
+            col3, col4 = st.columns(2)
+            with col3:
+                st.markdown(f"""
+                <div class="metric-container">
+                    <h4 style="color: #45B7D1; margin: 0;">VGG16</h4>
+                    <h3 style="color: #FFFFFF; margin: 0;">{sidebar_vgg16_size:.1f} MB</h3>
+                </div>
+                """, unsafe_allow_html=True)
+            with col4:
+                st.markdown(f"""
+                <div class="metric-container">
+                    <h4 style="color: #45B7D1; margin: 0;">MobileNetV2</h4>
+                    <h3 style="color: #FFFFFF; margin: 0;">{sidebar_mobilenetv2_size:.1f} MB</h3>
+                </div>
+                """, unsafe_allow_html=True)
+        else:
+            st.markdown("""
+            <div class="warning-box">
+                <h4>⚠ Metrik model tidak tersedia</h4>
             </div>
             """, unsafe_allow_html=True)
-        with col2:
-            st.markdown(f"""
-            <div class="metric-container">
-                <h4 style="color: #4ECDC4; margin: 0;">MobileNetV2</h4>
-                <h2 style="color: #FF6B6B; margin: 0;">{sidebar_mobilenetv2_accuracy:.1%}</h2>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        st.markdown("### 📏 Ukuran Model (dari Pelatihan)")
-        col3, col4 = st.columns(2)
-        with col3:
-            st.markdown(f"""
-            <div class="metric-container">
-                <h4 style="color: #45B7D1; margin: 0;">VGG16</h4>
-                <h3 style="color: #FFFFFF; margin: 0;">{sidebar_vgg16_size:.1f} MB</h3>
-            </div>
-            """, unsafe_allow_html=True)
-        with col4:
-            st.markdown(f"""
-            <div class="metric-container">
-                <h4 style="color: #45B7D1; margin: 0;">MobileNetV2</h4>
-                <h3 style="color: #FFFFFF; margin: 0;">{sidebar_mobilenetv2_size:.1f} MB</h3>
-            </div>
-            """, unsafe_allow_html=True)
-    else:
-        st.markdown("""
-        <div class="warning-box">
-            <h4>⚠ Metrik model tidak tersedia</h4>
-        </div>
-        """, unsafe_allow_html=True)
     
     st.markdown("---")
     
@@ -921,7 +1932,7 @@ with st.sidebar:
             raise ImportError("Library tidak tersedia")
     except Exception:
         try:
-            import google.generativeai as genai
+            import google.generativeai as genai  # type: ignore
             globals()['genai'] = genai
             globals()['GEMINI_AVAILABLE'] = True
         except ImportError:
@@ -1250,14 +2261,21 @@ def predict_image_local(model, img_array, demo_mode=False, confidence_threshold=
 # ==============================================================================
 
 # Header utama
-st.markdown('<h1 class="main-header">🐉 Klasifikasi Kematangan Buah Naga</h1>', unsafe_allow_html=True) # Dihapus (Versi Lokal)
+st.markdown('<h1 class="main-header">🐉 Klasifikasi Kematangan Buah Naga</h1>', unsafe_allow_html=True)
 st.markdown("""
-<div class="info-box">
-    <h3 style="color: white; font-weight: 700; margin-bottom: 1rem;">📋 Tentang Aplikasi</h3>
+<div style="background: linear-gradient(135deg, #1A1A2E 0%, #16213E 100%);
+            padding: 1.5rem;
+            border-radius: 15px;
+            border: 2px solid #4ECDC4;
+            margin: 0.5rem 0;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);">
+    <h3 style="color: white; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+        📋 Tentang Aplikasi
+    </h3>
     <p style="color: white; font-weight: 500; font-size: 1.1rem; line-height: 1.6; margin-bottom: 1rem;">
-        Aplikasi ini menggunakan model <strong style="color: #4ECDC4;">Convolutional Neural Network (CNN)</strong> VGG16 dan MobileNetV2 untuk mengklasifikasikan buah naga menjadi:
+        Aplikasi ini menggunakan model <strong style="color: #4ECDC4;">Convolutional Neural Network (CNN)</strong> <strong style="color: #4ECDC4;">VGG16</strong> dan <strong style="color: #4ECDC4;">MobileNetV2</strong> untuk mengklasifikasikan buah naga menjadi:
     </p>
-    <ul style="color: white; font-weight: 500; font-size: 1rem; line-height: 1.8;">
+    <ul style="color: white; font-weight: 500; font-size: 1rem; line-height: 1.8; margin: 0; padding-left: 1.5rem;">
         <li style="margin-bottom: 0.5rem;">🍎 <strong style="color: #FF6B6B;">Mature Dragon Fruit</strong> - Buah Naga Matang</li>
         <li style="margin-bottom: 0.5rem;">🍏 <strong style="color: #45B7D1;">Immature Dragon Fruit</strong> - Buah Naga Mentah</li>
         <li style="margin-bottom: 0.5rem;">🍎 <strong style="color: #E74C3C;">Defect Dragon Fruit</strong> - Buah Naga Busuk</li>
@@ -1266,38 +2284,51 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Bagian Performa Model dan Hasil Analisis Pelatihan
-st.markdown('<h2 class="sub-header">📊 Performa Model dari Pelatihan</h2>', unsafe_allow_html=True)
+st.markdown("""
+<h2 style="font-size: 1.8rem; font-weight: 700; color: white; margin-top: 2rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+    <span style="display: inline-block; width: 24px; height: 24px; background: #4ECDC4; border-radius: 4px;"></span>
+    Performa Model dari Pelatihan
+</h2>
+""", unsafe_allow_html=True)
 if model_performance_metrics:
     # Gunakan .get() untuk menghindari KeyError
     vgg16_accuracy = model_performance_metrics.get('vgg16', {}).get('accuracy', 0.0)
-    vgg16_size = model_performance_metrics.get('vgg16', {}).get('model_size_mb', 0.0)
     mobilenetv2_accuracy = model_performance_metrics.get('mobilenetv2', {}).get('accuracy', 0.0)
-    mobilenetv2_size = model_performance_metrics.get('mobilenetv2', {}).get('model_size_mb', 0.0)
     
     col1, col2 = st.columns(2)
     with col1:
         st.markdown(f"""
-        <div class="metric-card">
-            <h3>🔵 Model VGG16</h3>
+        <div style="background: linear-gradient(135deg, #1A1A2E 0%, #16213E 100%);
+                    padding: 2rem;
+                    border-radius: 20px;
+                    box-shadow: 0 12px 24px rgba(0,0,0,0.4);
+                    margin: 1rem 0;
+                    color: white;
+                    text-align: center;">
+            <h3 style="color: white; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                <span style="display: inline-block; width: 32px; height: 32px; background: #4ECDC4; border-radius: 50%;"></span>
+                Model VGG16
+            </h3>
             <div style="text-align: center;">
-                <h2 style="color: #4ECDC4; margin: 0;">{vgg16_accuracy:.1%}</h2>
-                <p style="margin: 0;">Akurasi Test Set</p>
-                <hr style="margin: 1rem 0;">
-                <h4 style="color: #FF6B6B; margin: 0;">{vgg16_size:.1f} MB</h4>
-                <p style="margin: 0;">Ukuran Model</p>
+                <h2 style="color: white; margin: 0; font-size: 3rem; font-weight: bold;">{vgg16_accuracy:.1%}</h2>
             </div>
         </div>
         """, unsafe_allow_html=True)
     with col2:
         st.markdown(f"""
-        <div class="metric-card">
-            <h3>🟢 Model MobileNetV2</h3>
+        <div style="background: linear-gradient(135deg, #1A1A2E 0%, #16213E 100%);
+                    padding: 2rem;
+                    border-radius: 20px;
+                    box-shadow: 0 12px 24px rgba(0,0,0,0.4);
+                    margin: 1rem 0;
+                    color: white;
+                    text-align: center;">
+            <h3 style="color: white; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                <span style="display: inline-block; width: 32px; height: 32px; background: #2ECC71; border-radius: 50%;"></span>
+                Model MobileNetV2
+            </h3>
             <div style="text-align: center;">
-                <h2 style="color: #4ECDC4; margin: 0;">{mobilenetv2_accuracy:.1%}</h2>
-                <p style="margin: 0;">Akurasi Test Set</p>
-                <hr style="margin: 1rem 0;">
-                <h4 style="color: #FF6B6B; margin: 0;">{mobilenetv2_size:.1f} MB</h4>
-                <p style="margin: 0;">Ukuran Model</p>
+                <h2 style="color: white; margin: 0; font-size: 3rem; font-weight: bold;">{mobilenetv2_accuracy:.1%}</h2>
             </div>
         </div>
         """, unsafe_allow_html=True)
