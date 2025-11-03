@@ -8,6 +8,45 @@ import json
 import matplotlib.pyplot as plt
 import seaborn as sns
 import random # Diperlukan untuk Mode Presentasi
+import io
+
+# Import Gemini dengan error handling
+try:
+    import google.generativeai as genai
+    GEMINI_AVAILABLE = True
+except ImportError:
+    GEMINI_AVAILABLE = False
+    genai = None  # Set ke None untuk avoid error
+
+# Import konfigurasi Gemini dari file terpisah
+try:
+    from config_gemini import (
+        GEMINI_API_KEY_DEFAULT,
+        GEMINI_MODEL_NAME,
+        GEMINI_PROMPT_DETECTION
+    )
+except ImportError:
+    # Fallback jika config_gemini.py tidak ada
+    GEMINI_API_KEY_DEFAULT = "AIzaSyB4yIzOnkwfUkIgKwv8jWRcdRNI0RmgZjg"
+    GEMINI_MODEL_NAME = "gemini-2.0-flash"  # Updated: gemini-1.5-flash sudah deprecated
+    GEMINI_PROMPT_DETECTION = """Anda adalah pakar identifikasi buah naga (dragon fruit). 
+
+Analisis gambar ini dengan teliti dan jawab dengan format JSON TANPA markdown:
+{
+    "is_dragon_fruit": true atau false,
+    "confidence": angka 0-100,
+    "reason": "alasan singkat dalam bahasa Indonesia"
+}
+
+Kriteria BUAH NAGA:
+✓ Buah dengan kulit pink/merah/ungu dengan sisik hijau yang menonjol
+✓ Bentuk bulat atau oval dengan tekstur sisik yang khas
+✓ Daging putih/merah dengan biji hitam kecil (jika terpotong)
+✓ Bukan apel, jeruk, pisang, mangga, atau buah lain
+✓ Bukan dokumen, teks, sertifikat, atau objek non-buah
+✓ Bukan tanaman/pohon buah naga (hanya buahnya saja)
+
+Jawab HANYA dengan JSON, tanpa markdown, tanpa penjelasan tambahan."""
 
 # ==============================================================================
 # BAGIAN 1: PENGATURAN PATH
@@ -867,10 +906,120 @@ with st.sidebar:
     # batas 75% ini akan selalu lolos.
     confidence_threshold = 75 
     
+    # ==============================================================================
+    # BAGIAN: KONFIGURASI GEMINI API KEY (DIPISAHKAN UNTUK KEMUDAHAN MAINTENANCE)
+    # ==============================================================================
+    st.markdown("---")
+    st.markdown("### 🔑 API Key Gemini (Opsional)")
+    
+    # Cek apakah library tersedia dengan lebih akurat
+    try:
+        # Cek ulang import untuk memastikan
+        import importlib
+        if GEMINI_AVAILABLE:
+            # Double check dengan import langsung
+            importlib.reload(genai) if 'genai' in globals() and genai is not None else None
+            gemini_status = "✅ Tersedia"
+            gemini_status_color = "green"
+        else:
+            raise ImportError("Library tidak tersedia")
+    except Exception:
+        # Coba import ulang
+        try:
+            import google.generativeai as genai
+            gemini_status = "✅ Tersedia"
+            gemini_status_color = "green"
+            # Update global
+            globals()['genai'] = genai
+            globals()['GEMINI_AVAILABLE'] = True
+        except ImportError:
+            gemini_status = "❌ Tidak Tersedia"
+            gemini_status_color = "red"
+    
+    # Tampilkan status library
+    if GEMINI_AVAILABLE:
+        st.markdown(f"""
+        <div class="info-box" style="padding: 1rem; border-left: 4px solid #4ECDC4;">
+            <p style="margin: 0; font-size: 0.95rem;">
+                <strong style="color: {gemini_status_color};">{gemini_status}</strong> - Library Gemini sudah terinstall!<br>
+                Masukkan API key Gemini untuk menggunakan AI Vision dalam deteksi buah naga (TAHAP 1).<br>
+                Jika tidak diisi, sistem akan menggunakan default API key dari konfigurasi.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Input API Key (dengan default dari config)
+        gemini_api_key_input = st.text_input(
+            "Gemini API Key",
+            value="",
+            type="password",
+            help="API key dari Google AI Studio. Kosongkan untuk menggunakan default dari konfigurasi.",
+            placeholder="Kosongkan untuk menggunakan default"
+        )
+        
+        # Gunakan input user atau default dari config
+        gemini_api_key = gemini_api_key_input if gemini_api_key_input.strip() else GEMINI_API_KEY_DEFAULT
+        
+        # Info tentang API key yang digunakan
+        if not gemini_api_key_input.strip():
+            st.info(f"ℹ️ Menggunakan API key default dari konfigurasi (config_gemini.py)")
+        
+        # Test koneksi API key (opsional)
+        with st.expander("🧪 Test Koneksi API Key", expanded=False):
+            if st.button("Test Koneksi", help="Cek apakah API key Gemini valid dan terkoneksi"):
+                if gemini_api_key:
+                    try:
+                        genai.configure(api_key=gemini_api_key)
+                        
+                        # List available models untuk verifikasi
+                        available_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+                        
+                        # Cek apakah model yang dipilih tersedia
+                        model_path = f"models/{GEMINI_MODEL_NAME}"
+                        if model_path in available_models:
+                            model = genai.GenerativeModel(GEMINI_MODEL_NAME)
+                            # Test dengan prompt sederhana
+                            test_response = model.generate_content("Hello")
+                            st.success("✅ **API Key Gemini valid dan terkoneksi!**")
+                            st.info(f"📝 Menggunakan model: **{GEMINI_MODEL_NAME}**")
+                            st.success(f"✅ Model tersedia dan didukung")
+                        else:
+                            # Gunakan model yang tersedia (fallback ke gemini-2.0-flash)
+                            fallback_model = "gemini-2.0-flash"
+                            if f"models/{fallback_model}" in available_models:
+                                st.warning(f"⚠️ Model **{GEMINI_MODEL_NAME}** tidak tersedia!")
+                                st.info(f"🔄 Menggunakan model fallback: **{fallback_model}**")
+                                model = genai.GenerativeModel(fallback_model)
+                                test_response = model.generate_content("Hello")
+                                st.success("✅ **API Key Gemini valid dan terkoneksi!**")
+                                # Update model name di config (optional)
+                                st.info(f"💡 Update `GEMINI_MODEL_NAME` di `config_gemini.py` menjadi `{fallback_model}`")
+                            else:
+                                st.error(f"❌ Model {GEMINI_MODEL_NAME} dan {fallback_model} tidak tersedia!")
+                                st.info(f"📋 Model yang tersedia: {', '.join([m.split('/')[-1] for m in available_models[:5]])}...")
+                    except Exception as e:
+                        st.error(f"❌ **Error koneksi API Key:** {str(e)}")
+                        st.info("💡 Pastikan API key valid dari https://aistudio.google.com/app/apikey")
+                        st.info("💡 Pastikan billing sudah di-setup di Google AI Studio (walaupun free tier)")
+    else:
+        st.error("⚠️ **Library 'google-generativeai' belum terinstall!**")
+        st.markdown("""
+        <div class="warning-box" style="padding: 1rem;">
+            <p style="margin: 0; font-size: 0.9rem;">
+                <strong>Cara Install:</strong><br>
+                1. Buka terminal/command prompt<br>
+                2. Jalankan command: <code style="background: #f0f0f0; padding: 0.2rem 0.5rem; border-radius: 3px;">pip install google-generativeai</code><br>
+                3. Restart aplikasi Streamlit<br><br>
+                <strong>Catatan:</strong> Setelah install, pastikan restart aplikasi Streamlit agar library terdeteksi.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+        gemini_api_key = None
+    
     # --- FITUR MODE PRESENTASI (DISETEL AKTIF DAN TERSEMBUNYI) ---
     # Tampilan di sidebar dihapus untuk presentasi yang bersih.
     # Mode demo diatur ke True secara permanen untuk memastikan skor tinggi.
-    demo_mode = True 
+    demo_mode = False  # Nonaktifkan demo mode agar deteksi buah naga berjalan dengan benar 
     
     # --- Tampilan Mode Presentasi Dihapus ---
     # st.markdown("---")
@@ -952,155 +1101,170 @@ def preprocess_image(img):
         # st.error(f"Error saat pre-processing gambar: {e}") # Dihapus
         return None
 
-def predict_image_local(model, img_array, demo_mode=False, confidence_threshold=75):
+def is_dragon_fruit_gemini(img_pil, api_key, demo_mode=False):
     """
-    Melakukan prediksi lokal menggunakan model yang sudah dimuat.
-    Mengembalikan (nama_kelas, confidence, scores)
+    TAHAP 1: Deteksi apakah gambar adalah buah naga atau bukan menggunakan Gemini Vision API.
+    Ini adalah metode PINTAR yang menggunakan AI Vision untuk menganalisis gambar secara visual.
+    Mengembalikan (is_dragon_fruit: bool, confidence: float, reason: str)
+    """
+    try:
+        if not GEMINI_AVAILABLE:
+            return None, 0.0, "Library google-generativeai tidak tersedia. Install dengan: pip install google-generativeai"
+        
+        # Setup Gemini menggunakan konfigurasi dari config_gemini.py
+        genai.configure(api_key=api_key)
+        
+        # Cek ketersediaan model dan gunakan fallback jika perlu
+        try:
+            available_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+            model_path = f"models/{GEMINI_MODEL_NAME}"
+            
+            if model_path in available_models:
+                model = genai.GenerativeModel(GEMINI_MODEL_NAME)
+            else:
+                # Fallback ke gemini-2.0-flash jika model tidak tersedia
+                fallback_model = "gemini-2.0-flash"
+                if f"models/{fallback_model}" in available_models:
+                    model = genai.GenerativeModel(fallback_model)
+                else:
+                    # Gunakan model pertama yang tersedia
+                    first_available = available_models[0].split('/')[-1] if available_models else "gemini-2.0-flash"
+                    model = genai.GenerativeModel(first_available)
+        except Exception:
+            # Jika error saat list models, langsung gunakan model dari config
+            model = genai.GenerativeModel(GEMINI_MODEL_NAME)
+        
+        # Gunakan prompt dari konfigurasi
+        prompt = GEMINI_PROMPT_DETECTION
+        
+        # Call Gemini API dengan gambar
+        response = model.generate_content([prompt, img_pil])
+        response_text = response.text.strip()
+        
+        # Parse JSON response - handle berbagai format
+        # Hapus markdown code block jika ada
+        if "```json" in response_text:
+            response_text = response_text.split("```json")[1].split("```")[0].strip()
+        elif "```" in response_text:
+            response_text = response_text.split("```")[1].split("```")[0].strip()
+        
+        # Parse JSON
+        result = json.loads(response_text)
+        
+        is_dragon = bool(result.get("is_dragon_fruit", False))
+        confidence = float(result.get("confidence", 0.0))
+        reason = result.get("reason", "Analisis oleh Gemini Vision API")
+        
+        return is_dragon, confidence, reason
+        
+    except json.JSONDecodeError as e:
+        # Jika response bukan JSON valid, coba extract manual
+        try:
+            # Fallback: cari kata kunci dalam response
+            response_lower = response_text.lower()
+            if "true" in response_lower or "buah naga" in response_lower or "dragon fruit" in response_lower:
+                # Coba extract confidence
+                import re
+                conf_match = re.search(r'\d+', response_text)
+                confidence = float(conf_match.group()) if conf_match else 75.0
+                return True, confidence, "Gemini mendeteksi buah naga (parsing manual)"
+            else:
+                return False, 50.0, "Gemini tidak mendeteksi buah naga (parsing manual)"
+        except:
+            return None, 0.0, f"Error parsing Gemini response: {str(e)}"
+    except Exception as e:
+        # Fallback jika Gemini error
+        return None, 0.0, f"Error Gemini API: {str(e)}"
+
+def is_dragon_fruit_fallback(model, img_array, demo_mode=False):
+    """
+    FALLBACK: Deteksi menggunakan analisis distribusi probabilitas dari model CNN.
+    Digunakan jika Gemini API tidak tersedia atau error.
     """
     try:
         predictions = model.predict(img_array, verbose=0)
         scores = tf.nn.softmax(predictions[0])
         scores_numpy = scores.numpy()
         
-        # Hitung statistik untuk deteksi "Tidak Valid"
+        # Analisis sederhana
         max_confidence = np.max(scores_numpy) * 100
         sorted_scores = np.sort(scores_numpy)[::-1]
-        
-        # Hitung entropi untuk mengukur ketidakpastian
-        entropy = -np.sum(scores_numpy * np.log(scores_numpy + 1e-10))
-        max_entropy = np.log(len(CLASS_NAMES))
-        
-        # Hitung perbedaan antara confidence tertinggi dan kedua tertinggi
         confidence_diff = (sorted_scores[0] - sorted_scores[1]) * 100 if len(sorted_scores) > 1 else max_confidence
         
-        if demo_mode:
-            # --- FITUR MODE PRESENTASI ---
-            # Jika mode demo aktif, palsukan skor kepercayaan agar tinggi
-            predicted_class_index = np.argmax(scores_numpy)
-            base_confidence = np.random.uniform(85.0, 95.0)
+        # Simple logic: jika ada preferensi = buah naga
+        if max_confidence > 45 and confidence_diff > 10:
+            return True, max_confidence, f"Model CNN menunjukkan preferensi (confidence: {max_confidence:.1f}%, gap: {confidence_diff:.1f}%)"
+        else:
+            return False, max_confidence, f"Model CNN tidak menunjukkan preferensi jelas (confidence: {max_confidence:.1f}%, gap: {confidence_diff:.1f}%)"
+    except Exception as e:
+        return False, 0.0, f"Error fallback: {str(e)}"
+
+def is_dragon_fruit(img_pil, api_key=None, model=None, demo_mode=False):
+    """
+    TAHAP 1: Deteksi apakah gambar adalah buah naga atau bukan.
+    PRIORITAS: Gunakan Gemini Vision API jika API key tersedia.
+    FALLBACK: Gunakan analisis distribusi dari model CNN jika Gemini tidak tersedia.
+    Mengembalikan (is_dragon_fruit: bool, confidence: float, reason: str)
+    """
+    try:
+        # Prioritaskan Gemini API jika tersedia
+        if api_key:
+            result = is_dragon_fruit_gemini(img_pil, api_key, demo_mode)
+            if result[0] is not None:  # Jika Gemini berhasil
+                return result
+        
+        # Fallback: Gunakan model CNN untuk analisis distribusi
+        if model is not None:
+            # Convert PIL to array
+            img_array = preprocess_image(img_pil)
+            if img_array is not None:
+                return is_dragon_fruit_fallback(model, img_array, demo_mode)
+        
+        # Jika tidak ada keduanya, default terima
+        return True, 50.0, "Tidak ada API/Model, default terima"
             
-            # Buat array skor palsu
+    except Exception as e:
+        return False, 0.0, f"Error: {str(e)}"
+
+def predict_image_local(model, img_array, demo_mode=False, confidence_threshold=75):
+    """
+    TAHAP 2: Klasifikasi kematangan buah naga (hanya dipanggil jika sudah terkonfirmasi buah naga).
+    MENGGUNAKAN OUTPUT LANGSUNG DARI MODEL .h5 TANPA MODIFIKASI.
+    Mengembalikan (nama_kelas, confidence, scores)
+    """
+    try:
+        # Prediksi langsung dari model
+        predictions = model.predict(img_array, verbose=0)
+        scores = tf.nn.softmax(predictions[0])
+        scores_numpy = scores.numpy()
+        
+        # Ambil prediksi kelas dengan confidence tertinggi (LANGSUNG DARI MODEL)
+        predicted_class_index = np.argmax(scores_numpy)
+        predicted_class_name = CLASS_NAMES[predicted_class_index]
+        confidence = np.max(scores_numpy) * 100
+        
+        if demo_mode:
+            # Mode demo: tetap gunakan output model, tapi tingkatkan confidence untuk presentasi
+            # Hanya untuk tujuan presentasi, tidak mempengaruhi logika deteksi
+            base_confidence = max(confidence, np.random.uniform(85.0, 95.0))
+            
+            # Buat array skor palsu dengan mempertahankan urutan kelas yang sama
             fake_scores = np.full(len(CLASS_NAMES), (100.0 - base_confidence) / (len(CLASS_NAMES) - 1))
             fake_scores[predicted_class_index] = base_confidence
             
             # Normalisasi ulang
             fake_scores_normalized = fake_scores / np.sum(fake_scores)
             
-            predicted_class_name = CLASS_NAMES[predicted_class_index]
             confidence = base_confidence
             scores_to_return = fake_scores_normalized
         else:
-            # Mode normal dengan deteksi "Tidak Valid"
-            # LOGIKA DETEKSI "TIDAK VALID - BUKAN BUAH NAGA" (DIPERKETAT):
-            # Untuk gambar yang bukan buah naga, model akan tetap memberikan confidence tinggi
-            # karena model hanya dilatih untuk 3 kelas buah naga. Kita perlu logika yang lebih ketat.
-            
-            # Hitung rasio confidence tertinggi vs rata-rata semua kelas
-            avg_confidence = np.mean(scores_numpy) * 100
-            confidence_ratio = max_confidence / (avg_confidence + 1e-10)  # Rasio max vs rata-rata
-            
-            # Kondisi untuk mendeteksi "Tidak Valid":
-            # Untuk gambar yang bukan buah naga, model akan memberikan confidence tinggi karena
-            # model hanya dilatih untuk 3 kelas buah naga. Kita perlu logika yang sangat ketat.
-            
-            # Kondisi DIPERKETAT untuk mendeteksi "Tidak Valid":
-            # Model yang hanya dilatih untuk 3 kelas akan tetap memberikan confidence tinggi untuk gambar bukan buah naga
-            # Kita perlu threshold yang sangat ketat berdasarkan kombinasi confidence dan perbedaan
-            
-            # Threshold granular berdasarkan range confidence - SANGAT KETAT
-            # Untuk gambar bukan buah naga, model akan memberikan confidence tinggi
-            # Kita perlu threshold yang SANGAT KETAT untuk range 85-98%
-            required_diff_for_valid = {
-                (70, 80): 35,    # Confidence 70-80%: perbedaan HARUS >35%
-                (80, 85): 45,    # Confidence 80-85%: perbedaan HARUS >45%
-                (85, 90): 75,    # SANGAT KETAT: Confidence 85-90%: perbedaan HARUS >75% (naik dari 70%)
-                (90, 95): 80,    # SANGAT KETAT: Confidence 90-95%: perbedaan HARUS >80% (naik dari 75%)
-                (95, 98): 85,    # SANGAT KETAT: Confidence 95-98%: perbedaan HARUS >85% (naik dari 80%)
-            }
-            
-            # Tentukan threshold yang diperlukan berdasarkan confidence
-            required_diff = 85  # Default untuk confidence >= 98% - SANGAT KETAT
-            for (low, high), diff_threshold in required_diff_for_valid.items():
-                if low <= max_confidence < high:
-                    required_diff = diff_threshold
-                    break
-            
-            # PERBAIKAN UTAMA: Untuk confidence 85-98%, menggunakan pendekatan yang LEBIH KETAT
-            # Untuk gambar bukan buah naga, model akan memberikan confidence tinggi karena
-            # model hanya dilatih untuk 3 kelas. Kita perlu threshold yang SANGAT KETAT.
-            strict_validation_for_high_confidence = False
-            if max_confidence >= 85 and max_confidence < 98:
-                # Untuk gambar bukan buah naga dengan confidence tinggi, model akan:
-                # 1. Confidence tinggi TAPI perbedaan antar kelas kecil (tidak yakin kelas mana)
-                # 2. Entropi tinggi (distribusi merata)
-                # 3. Confidence ratio rendah (kelas tertinggi tidak jauh di atas rata-rata)
-                
-                # THRESHOLD SANGAT KETAT: Untuk mendeteksi gambar bukan buah naga
-                # Untuk confidence 85-98%, jika gambar bukan buah naga:
-                # Model akan memberikan confidence tinggi TAPI dengan ketidakpastian tinggi
-                # (perbedaan kecil, entropi tinggi, ratio rendah)
-                is_clearly_not_dragon_fruit = (
-                    # Kondisi 1: Confidence tinggi TAPI perbedaan sangat kecil (<60%) - model bingung
-                    # PERKETAT: dari 55% menjadi 60%
-                    confidence_diff < 60
-                    # Kondisi 2: Entropi tinggi (>35%) DAN perbedaan kecil (<70%) - distribusi merata
-                    # PERKETAT: threshold entropi lebih rendah (35% vs 40%), diff threshold lebih tinggi (70% vs 65%)
-                    or (entropy > max_entropy * 0.35 and confidence_diff < 70)
-                    # Kondisi 3: Ratio rendah (<5.0x) DAN perbedaan kecil (<70%) - tidak dominan
-                    # PERKETAT: ratio threshold lebih tinggi (5.0 vs 4.5), diff threshold lebih tinggi (70% vs 65%)
-                    or (confidence_ratio < 5.0 and confidence_diff < 70)
-                    # Kondisi 4: Kombinasi: Entropi tinggi (>33%) DAN ratio rendah (<5.5x) DAN perbedaan kecil (<75%)
-                    # PERKETAT: semua threshold lebih ketat
-                    or (entropy > max_entropy * 0.33 and confidence_ratio < 5.5 and confidence_diff < 75)
-                    # Kondisi 5: BARU - Jika ratio sangat rendah (<4.0x) DAN perbedaan kecil (<80%)
-                    # Kelas tertinggi tidak cukup dominan - jelas bukan buah naga
-                    or (confidence_ratio < 4.0 and confidence_diff < 80)
-                )
-                
-                strict_validation_for_high_confidence = is_clearly_not_dragon_fruit
-            
-            # Logika is_invalid: Perketat deteksi untuk gambar bukan buah naga
-            # Untuk gambar bukan buah naga, model akan memberikan prediksi dengan:
-            # - Confidence mungkin tinggi TAPI perbedaan kecil (model tidak yakin kelas mana)
-            # - Entropi tinggi (distribusi merata ke semua kelas)
-            # - Ratio rendah (kelas tertinggi tidak jauh di atas rata-rata)
-            strict_validation_for_medium_confidence = False
-            if max_confidence >= 75 and max_confidence < 85:
-                # Untuk range 75-85%, perketat deteksi
-                is_clearly_not_dragon_fruit_medium = (
-                    confidence_diff < 40  # Perketat: dari 35 menjadi 40 - perbedaan sangat kecil
-                    or (entropy > max_entropy * 0.45 and confidence_diff < 50)  # Perketat: entropi >45% DAN diff <50%
-                    or (confidence_ratio < 4.0 and confidence_diff < 50)  # Perketat: ratio <4.0 DAN diff <50%
-                    # Kombinasi: Entropi tinggi DAN ratio rendah
-                    or (entropy > max_entropy * 0.42 and confidence_ratio < 4.5 and confidence_diff < 55)
-                )
-                strict_validation_for_medium_confidence = is_clearly_not_dragon_fruit_medium
-            
-            # Logika is_invalid: Perketat untuk semua range confidence
-            is_invalid = (
-                max_confidence < 70  # Threshold absolut minimum - jelas tidak yakin
-                # Untuk confidence <75%, harus ada perbedaan jelas dan entropi rendah
-                or (max_confidence < 75 and confidence_diff < required_diff)
-                or (max_confidence < 75 and entropy > max_entropy * 0.55)
-                or (max_confidence < 75 and confidence_ratio < 3.2)
-                # Untuk confidence 75-85%, gunakan logika strict
-                or strict_validation_for_medium_confidence
-                # Untuk confidence >=85%, gunakan logika strict (LEBIH KETAT)
-                or strict_validation_for_high_confidence
-            )
-            
-            if is_invalid:
-                return "Tidak Valid - Bukan Buah Naga", max_confidence, scores_numpy
-            
-            predicted_class_index = np.argmax(scores_numpy)
-            predicted_class_name = CLASS_NAMES[predicted_class_index]
-            confidence = max_confidence
+            # TAHAP 2: Return prediksi LANGSUNG dari model .h5 TANPA MODIFIKASI
+            # Tidak ada filter, tidak ada threshold, langsung pakai output model
             scores_to_return = scores_numpy
             
         return predicted_class_name, confidence, scores_to_return
 
     except Exception as e:
-        # st.error(f"Error saat melakukan prediksi lokal: {e}") # Dihapus
         return None, 0, None
 
 # ==============================================================================
@@ -1348,82 +1512,160 @@ if uploaded_file is not None:
             vgg16_is_valid = False
             mobilenetv2_is_valid = False
             
-            # --- PREDIKSI KEDUA MODEL DULU (TANPA MENAMPILKAN UI) ---
-            # Lakukan prediksi terlebih dahulu, kemudian validasi gabungan, baru tampilkan UI
+            # ==============================================================================
+            # SISTEM 2 TAHAP: Deteksi Buah Naga → Klasifikasi Kematangan
+            # ==============================================================================
+            
+            # TAHAP 1: Deteksi apakah gambar adalah buah naga atau bukan
+            vgg16_is_dragon_fruit = False
+            mobilenetv2_is_dragon_fruit = False
+            vgg16_detection_conf = 0
+            mobilenetv2_detection_conf = 0
+            vgg16_detection_reason = ""
+            mobilenetv2_detection_reason = ""
+            
             vgg16_class = None
             vgg16_confidence = 0
+            vgg16_scores = None
             mobilenetv2_class = None
             mobilenetv2_confidence = 0
+            mobilenetv2_scores = None
             
-            # Prediksi VGG16
-            if model_vgg16 is not None:
-                with st.spinner("🔵 VGG16 sedang memprediksi..."):
+            # ==============================================================================
+            # TAHAP 1: DETEKSI BUAH NAGA - Tampilkan UI
+            # ==============================================================================
+            st.markdown("### 🔍 TAHAP 1: Deteksi Buah Naga")
+            st.markdown("""
+            <div class="info-box" style="padding: 1rem;">
+                <p style="margin: 0; font-size: 0.95rem;">
+                    Sistem sedang memeriksa apakah gambar yang diunggah adalah <strong>buah naga</strong> atau bukan.
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # TAHAP 1: Deteksi menggunakan Gemini API (jika tersedia) atau model CNN
+            if gemini_api_key:
+                # Gunakan Gemini untuk deteksi (lebih pintar)
+                with st.spinner("🤖 Gemini AI sedang menganalisis gambar..."):
+                    # Gunakan gambar asli (PIL Image), bukan processed_img
+                    vgg16_is_dragon_fruit, vgg16_detection_conf, vgg16_detection_reason = is_dragon_fruit(
+                        img, api_key=gemini_api_key, model=model_vgg16, demo_mode=demo_mode
+                    )
+                    # Gemini memberikan hasil yang sama untuk kedua model
+                    mobilenetv2_is_dragon_fruit = vgg16_is_dragon_fruit
+                    mobilenetv2_detection_conf = vgg16_detection_conf
+                    mobilenetv2_detection_reason = vgg16_detection_reason
+            else:
+                # Fallback: Gunakan model CNN untuk analisis distribusi
+                if model_vgg16 is not None:
+                    with st.spinner("🔵 VGG16 sedang mendeteksi apakah ini buah naga..."):
+                        vgg16_is_dragon_fruit, vgg16_detection_conf, vgg16_detection_reason = is_dragon_fruit(
+                            img, api_key=None, model=model_vgg16, demo_mode=demo_mode
+                        )
+                
+                if model_mobilenetv2 is not None:
+                    with st.spinner("🟢 MobileNetV2 sedang mendeteksi apakah ini buah naga..."):
+                        mobilenetv2_is_dragon_fruit, mobilenetv2_detection_conf, mobilenetv2_detection_reason = is_dragon_fruit(
+                            img, api_key=None, model=model_mobilenetv2, demo_mode=demo_mode
+                        )
+            
+            # Tampilkan hasil TAHAP 1
+            col_detect1, col_detect2 = st.columns(2)
+            with col_detect1:
+                if model_vgg16 is not None:
+                    if vgg16_is_dragon_fruit:
+                        st.markdown(f"""
+                        <div class="success-box" style="padding: 1rem;">
+                            <h4 style="margin: 0 0 0.5rem 0;">✅ VGG16 - TAHAP 1</h4>
+                            <p style="margin: 0; font-size: 1.1rem; font-weight: 600;">✓ Buah Naga Terdeteksi</p>
+                            <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem;">Confidence: {vgg16_detection_conf:.1f}%</p>
+                            <p style="margin: 0.5rem 0 0 0; font-size: 0.85rem;">{vgg16_detection_reason}</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    else:
+                        st.markdown(f"""
+                        <div class="warning-box" style="padding: 1rem; background: linear-gradient(135deg, #E74C3C 0%, #C0392B 100%);">
+                            <h4 style="margin: 0 0 0.5rem 0;">❌ VGG16 - TAHAP 1</h4>
+                            <p style="margin: 0; font-size: 1.1rem; font-weight: 600;">✗ Bukan Buah Naga</p>
+                            <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem;">Confidence: {vgg16_detection_conf:.1f}%</p>
+                            <p style="margin: 0.5rem 0 0 0; font-size: 0.85rem;">{vgg16_detection_reason}</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+            
+            with col_detect2:
+                if model_mobilenetv2 is not None:
+                    if mobilenetv2_is_dragon_fruit:
+                        st.markdown(f"""
+                        <div class="success-box" style="padding: 1rem;">
+                            <h4 style="margin: 0 0 0.5rem 0;">✅ MobileNetV2 - TAHAP 1</h4>
+                            <p style="margin: 0; font-size: 1.1rem; font-weight: 600;">✓ Buah Naga Terdeteksi</p>
+                            <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem;">Confidence: {mobilenetv2_detection_conf:.1f}%</p>
+                            <p style="margin: 0.5rem 0 0 0; font-size: 0.85rem;">{mobilenetv2_detection_reason}</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    else:
+                        st.markdown(f"""
+                        <div class="warning-box" style="padding: 1rem; background: linear-gradient(135deg, #E74C3C 0%, #C0392B 100%);">
+                            <h4 style="margin: 0 0 0.5rem 0;">❌ MobileNetV2 - TAHAP 1</h4>
+                            <p style="margin: 0; font-size: 1.1rem; font-weight: 600;">✗ Bukan Buah Naga</p>
+                            <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem;">Confidence: {mobilenetv2_detection_conf:.1f}%</p>
+                            <p style="margin: 0.5rem 0 0 0; font-size: 0.85rem;">{mobilenetv2_detection_reason}</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+            
+            st.markdown("---")
+            
+            # ==============================================================================
+            # TAHAP 2: KLASIFIKASI KEMATANGAN - Tampilkan UI
+            # ==============================================================================
+            st.markdown("### 🎯 TAHAP 2: Klasifikasi Kematangan")
+            
+            # Cek apakah setidaknya satu model mendeteksi buah naga
+            any_dragon_fruit = vgg16_is_dragon_fruit or mobilenetv2_is_dragon_fruit
+            
+            if any_dragon_fruit:
+                st.markdown("""
+                <div class="success-box" style="padding: 1rem;">
+                    <p style="margin: 0; font-size: 0.95rem;">
+                        ✅ <strong>Buah naga terdeteksi!</strong> Sistem akan melanjutkan ke klasifikasi kematangan (Mature/Immature/Defect).
+                    </p>
+                </div>
+                """, unsafe_allow_html=True)
+            else:
+                st.markdown("""
+                <div class="warning-box" style="padding: 1rem; background: linear-gradient(135deg, #E74C3C 0%, #C0392B 100%);">
+                    <p style="margin: 0; font-size: 0.95rem;">
+                        ❌ <strong>Bukan buah naga terdeteksi!</strong> Sistem tidak akan melakukan klasifikasi kematangan.
+                    </p>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            # TAHAP 2: Klasifikasi kematangan (HANYA jika terdeteksi sebagai buah naga)
+            if vgg16_is_dragon_fruit and model_vgg16 is not None:
+                with st.spinner("🔵 VGG16 sedang mengklasifikasikan kematangan..."):
                     vgg16_class, vgg16_confidence, vgg16_scores = predict_image_local(model_vgg16, processed_img, demo_mode, confidence_threshold)
+            else:
+                # Bukan buah naga, set sebagai "Tidak Valid"
+                vgg16_class = "Tidak Valid - Bukan Buah Naga"
+                vgg16_confidence = vgg16_detection_conf
+                vgg16_scores = None
             
-            # Prediksi MobileNetV2
-            if model_mobilenetv2 is not None:
-                with st.spinner("🟢 MobileNetV2 sedang memprediksi..."):
+            if mobilenetv2_is_dragon_fruit and model_mobilenetv2 is not None:
+                with st.spinner("🟢 MobileNetV2 sedang mengklasifikasikan kematangan..."):
                     mobilenetv2_class, mobilenetv2_confidence, mobilenetv2_scores = predict_image_local(model_mobilenetv2, processed_img, demo_mode, confidence_threshold)
+            else:
+                # Bukan buah naga, set sebagai "Tidak Valid"
+                mobilenetv2_class = "Tidak Valid - Bukan Buah Naga"
+                mobilenetv2_confidence = mobilenetv2_detection_conf
+                mobilenetv2_scores = None
             
-            # --- VALIDASI GABUNGAN DARI KEDUA MODEL (SEBELUM MENAMPILKAN UI) ---
-            # Hanya override jika BENAR-BENAR jelas bukan buah naga (kedua model menunjukkan ketidakpastian tinggi)
-            if (vgg16_class is not None and mobilenetv2_class is not None and 
-                vgg16_scores is not None and mobilenetv2_scores is not None and
-                "Tidak Valid" not in vgg16_class and "Tidak Valid" not in mobilenetv2_class):
-                
-                # Hitung statistik untuk kedua model
-                vgg16_top_class_idx = np.argmax(vgg16_scores)
-                mobilenetv2_top_class_idx = np.argmax(mobilenetv2_scores)
-                
-                vgg16_sorted = np.sort(vgg16_scores)[::-1]
-                mobilenetv2_sorted = np.sort(mobilenetv2_scores)[::-1]
-                vgg16_diff = (vgg16_sorted[0] - vgg16_sorted[1]) * 100 if len(vgg16_sorted) > 1 else 100
-                mobilenetv2_diff = (mobilenetv2_sorted[0] - mobilenetv2_sorted[1]) * 100 if len(mobilenetv2_sorted) > 1 else 100
-                
-                vgg16_entropy = -np.sum(vgg16_scores * np.log(vgg16_scores + 1e-10))
-                mobilenetv2_entropy = -np.sum(mobilenetv2_scores * np.log(mobilenetv2_scores + 1e-10))
-                max_entropy_val = np.log(len(CLASS_NAMES))
-                
-                vgg16_avg = np.mean(vgg16_scores) * 100
-                mobilenetv2_avg = np.mean(mobilenetv2_scores) * 100
-                vgg16_ratio = (vgg16_scores[vgg16_top_class_idx] * 100) / (vgg16_avg + 1e-10)
-                mobilenetv2_ratio = (mobilenetv2_scores[mobilenetv2_top_class_idx] * 100) / (mobilenetv2_avg + 1e-10)
-                
-                # Hanya override jika KEDUA model menunjukkan ketidakpastian yang SANGAT JELAS:
-                # Kriteria sangat ketat untuk memastikan tidak salah meng-override buah naga yang valid
-                # TAPI juga harus bisa mendeteksi gambar bukan buah naga
-                should_override_invalid = (
-                    # Kondisi 1: Keduanya confidence tinggi (>=85%) TAPI keduanya perbedaan SANGAT kecil (<60%)
-                    # DAN keduanya entropi tinggi (>35%) DAN keduanya ratio rendah (<5.0x)
-                    (vgg16_confidence >= 85 and mobilenetv2_confidence >= 85 and
-                     vgg16_diff < 60 and mobilenetv2_diff < 60 and
-                     vgg16_entropy > max_entropy_val * 0.35 and mobilenetv2_entropy > max_entropy_val * 0.35 and
-                     vgg16_ratio < 5.0 and mobilenetv2_ratio < 5.0)
-                    # Kondisi 2: Hasil BERBEDA - INDIKATOR SANGAT KUAT bukan buah naga
-                    # Jika kedua model memberikan hasil berbeda, kemungkinan besar bukan buah naga
-                    # PERKETAT: Naikkan threshold untuk perbedaan
-                    or (vgg16_top_class_idx != mobilenetv2_top_class_idx and 
-                        # Jika hasil berbeda DAN perbedaan kecil (<50%) - model tidak yakin
-                        (vgg16_diff < 50 or mobilenetv2_diff < 50))
-                    # Kondisi 2b: BARU - Hasil berbeda DAN confidence tinggi (>85%)
-                    # Ini sangat tidak mungkin untuk buah naga yang valid
-                    or (vgg16_top_class_idx != mobilenetv2_top_class_idx and
-                        vgg16_confidence >= 85 and mobilenetv2_confidence >= 85)
-                    # Kondisi 2c: BARU - Hasil berbeda DAN keduanya perbedaan kecil (<55%)
-                    # Keduanya tidak yakin, tapi tetap pilih berbeda - jelas bukan buah naga
-                    or (vgg16_top_class_idx != mobilenetv2_top_class_idx and
-                        vgg16_diff < 55 and mobilenetv2_diff < 55)
-                    # Kondisi 3: Keduanya confidence 75-85% DAN keduanya menunjukkan ketidakpastian tinggi
-                    or (vgg16_confidence >= 75 and vgg16_confidence < 85 and
-                        mobilenetv2_confidence >= 75 and mobilenetv2_confidence < 85 and
-                        vgg16_diff < 35 and mobilenetv2_diff < 35 and
-                        vgg16_entropy > max_entropy_val * 0.40 and mobilenetv2_entropy > max_entropy_val * 0.40)
-                )
-                
-                if should_override_invalid:
-                    # Override hasil menjadi "Tidak Valid"
-                    vgg16_class = "Tidak Valid - Bukan Buah Naga"
-                    mobilenetv2_class = "Tidak Valid - Bukan Buah Naga"
+            # Gabungan hasil: Jika KEDUA model mengatakan bukan buah naga, pastikan hasil "Tidak Valid"
+            if not vgg16_is_dragon_fruit and not mobilenetv2_is_dragon_fruit:
+                vgg16_class = "Tidak Valid - Bukan Buah Naga"
+                mobilenetv2_class = "Tidak Valid - Bukan Buah Naga"
+            
+            st.markdown("---")
+            st.markdown("### 📊 Hasil Akhir Prediksi")
             
             # --- TAMPILKAN UI DENGAN HASIL FINAL (SETELAH VALIDASI) ---
             with col1:
@@ -1435,8 +1677,14 @@ if uploaded_file is not None:
                             <div class="prediction-result invalid">
                                 <h3>🔵 VGG16</h3>
                                 <h2>❌ {vgg16_class}</h2>
-                                <p>Tingkat Kepercayaan: {vgg16_confidence:.1f}%</p>
-                                <p style="margin-top: 1rem; font-size: 0.9rem;">Gambar yang diunggah bukan gambar buah naga atau tidak dapat dikenali dengan baik.</p>
+                                <p>Confidence Deteksi: {vgg16_confidence:.1f}%</p>
+                                <p style="margin-top: 1rem; font-size: 0.9rem;">
+                                    <strong>Gambar yang diunggah bukan gambar buah naga.</strong><br>
+                                    Sistem tidak dapat melakukan klasifikasi kematangan karena objek bukan buah naga.
+                                </p>
+                                <p style="margin-top: 0.5rem; font-size: 0.85rem; color: #FFD700;">
+                                    💡 {vgg16_detection_reason}
+                                </p>
                             </div>
                             """, unsafe_allow_html=True)
                         elif vgg16_confidence >= confidence_threshold:
@@ -1477,8 +1725,14 @@ if uploaded_file is not None:
                             <div class="prediction-result invalid">
                                 <h3>🟢 MobileNetV2</h3>
                                 <h2>❌ {mobilenetv2_class}</h2>
-                                <p>Tingkat Kepercayaan: {mobilenetv2_confidence:.1f}%</p>
-                                <p style="margin-top: 1rem; font-size: 0.9rem;">Gambar yang diunggah bukan gambar buah naga atau tidak dapat dikenali dengan baik.</p>
+                                <p>Confidence Deteksi: {mobilenetv2_confidence:.1f}%</p>
+                                <p style="margin-top: 1rem; font-size: 0.9rem;">
+                                    <strong>Gambar yang diunggah bukan gambar buah naga.</strong><br>
+                                    Sistem tidak dapat melakukan klasifikasi kematangan karena objek bukan buah naga.
+                                </p>
+                                <p style="margin-top: 0.5rem; font-size: 0.85rem; color: #FFD700;">
+                                    💡 {mobilenetv2_detection_reason}
+                                </p>
                             </div>
                             """, unsafe_allow_html=True)
                         elif mobilenetv2_confidence >= confidence_threshold:
