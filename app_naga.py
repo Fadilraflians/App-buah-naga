@@ -912,107 +912,86 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("### 🔑 API Key Gemini (Opsional)")
     
-    # Cek apakah library tersedia dengan lebih akurat
+    # Cek apakah library tersedia
     try:
-        # Cek ulang import untuk memastikan
         import importlib
         if GEMINI_AVAILABLE:
-            # Double check dengan import langsung
             importlib.reload(genai) if 'genai' in globals() and genai is not None else None
-            gemini_status = "✅ Tersedia"
-            gemini_status_color = "green"
         else:
             raise ImportError("Library tidak tersedia")
     except Exception:
-        # Coba import ulang
         try:
             import google.generativeai as genai
-            gemini_status = "✅ Tersedia"
-            gemini_status_color = "green"
-            # Update global
             globals()['genai'] = genai
             globals()['GEMINI_AVAILABLE'] = True
         except ImportError:
-            gemini_status = "❌ Tidak Tersedia"
-            gemini_status_color = "red"
+            pass
     
-    # Tampilkan status library
+    # Tampilkan status library Gemini
     if GEMINI_AVAILABLE:
-        st.markdown(f"""
-        <div class="info-box" style="padding: 1rem; border-left: 4px solid #4ECDC4;">
-            <p style="margin: 0; font-size: 0.95rem;">
-                <strong style="color: {gemini_status_color};">{gemini_status}</strong> - Library Gemini sudah terinstall!<br>
+        st.markdown("""
+        <div style="background: linear-gradient(135deg, #1A1A2E 0%, #16213E 100%); 
+                    padding: 1rem; border-radius: 10px; border: 2px solid #4ECDC4; 
+                    margin-bottom: 1rem;">
+            <p style="color: #2ECC71; margin: 0 0 0.5rem 0; font-weight: 600;">
+                ✅ Tersedia - Library Gemini sudah terinstall!
+            </p>
+            <p style="color: white; margin: 0; font-size: 0.9rem; line-height: 1.6;">
                 Masukkan API key Gemini untuk menggunakan AI Vision dalam deteksi buah naga (TAHAP 1).<br>
                 Jika tidak diisi, sistem akan menggunakan API key default yang telah dikonfigurasi.
             </p>
         </div>
         """, unsafe_allow_html=True)
-        
-        # Input API Key (dengan default dari config)
-        gemini_api_key_input = st.text_input(
-            "Gemini API Key",
-            value="",
-            type="password",
-            help="API key dari Google AI Studio. Kosongkan untuk menggunakan default dari konfigurasi.",
-            placeholder="Kosongkan untuk menggunakan default"
-        )
-        
-        # Gunakan input user atau default dari config
-        gemini_api_key = gemini_api_key_input if gemini_api_key_input.strip() else GEMINI_API_KEY_DEFAULT
-        
-        # Jangan tampilkan info tentang API key yang digunakan (untuk keamanan)
-        # Info dihapus untuk mencegah exposure API key
-        
-        # Test koneksi API key (opsional)
-        with st.expander("🧪 Test Koneksi API Key", expanded=False):
-            if st.button("Test Koneksi", help="Cek apakah API key Gemini valid dan terkoneksi"):
-                if gemini_api_key:
-                    try:
-                        genai.configure(api_key=gemini_api_key)
-                        
-                        # List available models untuk verifikasi
-                        available_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
-                        
-                        # Cek apakah model yang dipilih tersedia
-                        model_path = f"models/{GEMINI_MODEL_NAME}"
-                        if model_path in available_models:
-                            model = genai.GenerativeModel(GEMINI_MODEL_NAME)
-                            # Test dengan prompt sederhana
-                            test_response = model.generate_content("Hello")
-                            st.success("✅ **API Key Gemini valid dan terkoneksi!**")
-                            st.info(f"📝 Menggunakan model: **{GEMINI_MODEL_NAME}**")
-                            st.success(f"✅ Model tersedia dan didukung")
-                        else:
-                            # Gunakan model yang tersedia (fallback ke gemini-2.0-flash)
-                            fallback_model = "gemini-2.0-flash"
-                            if f"models/{fallback_model}" in available_models:
-                                st.warning(f"⚠️ Model **{GEMINI_MODEL_NAME}** tidak tersedia!")
-                                st.info(f"🔄 Menggunakan model fallback: **{fallback_model}**")
-                                model = genai.GenerativeModel(fallback_model)
-                                test_response = model.generate_content("Hello")
-                                st.success("✅ **API Key Gemini valid dan terkoneksi!**")
-                                # Update model name di config (optional)
-                                st.info(f"💡 Update `GEMINI_MODEL_NAME` di `config_gemini.py` menjadi `{fallback_model}`")
-                            else:
-                                st.error(f"❌ Model {GEMINI_MODEL_NAME} dan {fallback_model} tidak tersedia!")
-                                st.info(f"📋 Model yang tersedia: {', '.join([m.split('/')[-1] for m in available_models[:5]])}...")
-                    except Exception as e:
-                        st.error(f"❌ **Error koneksi API Key:** {str(e)}")
-                        st.info("💡 Pastikan API key valid dari https://aistudio.google.com/app/apikey")
-                        st.info("💡 Pastikan billing sudah di-setup di Google AI Studio (walaupun free tier)")
     else:
-        st.error("⚠️ **Library 'google-generativeai' belum terinstall!**")
         st.markdown("""
-        <div class="warning-box" style="padding: 1rem;">
-            <p style="margin: 0; font-size: 0.9rem;">
-                <strong>Cara Install:</strong><br>
-                1. Buka terminal/command prompt<br>
-                2. Jalankan command: <code style="background: #f0f0f0; padding: 0.2rem 0.5rem; border-radius: 3px;">pip install google-generativeai</code><br>
-                3. Restart aplikasi Streamlit<br><br>
-                <strong>Catatan:</strong> Setelah install, pastikan restart aplikasi Streamlit agar library terdeteksi.
+        <div style="background: linear-gradient(135deg, #1A1A2E 0%, #16213E 100%); 
+                    padding: 1rem; border-radius: 10px; border: 2px solid #E74C3C; 
+                    margin-bottom: 1rem;">
+            <p style="color: #E74C3C; margin: 0; font-weight: 600;">
+                ❌ Library Gemini tidak tersedia
+            </p>
+            <p style="color: white; margin: 0.5rem 0 0 0; font-size: 0.9rem;">
+                Install dengan: pip install google-generativeai
             </p>
         </div>
         """, unsafe_allow_html=True)
+    
+    # Input field untuk API key - DISEMBUNYIKAN untuk keamanan
+    # gemini_api_key_input = st.text_input(
+    #     "Gemini API Key",
+    #     value="",
+    #     type="password",
+    #     help="Kosongkan untuk menggunakan API key default yang telah dikonfigurasi",
+    #     placeholder="Kosongkan untuk menggunakan default"
+    # )
+    
+    # Gunakan nilai kosong (tidak ada input dari user)
+    gemini_api_key_input = ""
+    
+    # Tombol test koneksi
+    if st.button("🧪 Test Koneksi API Key", use_container_width=True):
+        test_api_key = gemini_api_key_input if gemini_api_key_input else GEMINI_API_KEY_DEFAULT
+        
+        if test_api_key:
+            try:
+                if GEMINI_AVAILABLE:
+                    genai.configure(api_key=test_api_key)
+                    # Test dengan list models
+                    models = genai.list_models()
+                    st.success("✅ Koneksi berhasil! API key valid.")
+                else:
+                    st.error("❌ Library Gemini tidak tersedia.")
+            except Exception as e:
+                st.error(f"❌ Koneksi gagal: {str(e)}")
+        else:
+            st.warning("⚠️ Masukkan API key terlebih dahulu.")
+    
+    # Gunakan API key dari input atau default
+    if gemini_api_key_input:
+        gemini_api_key = gemini_api_key_input
+    elif GEMINI_AVAILABLE:
+        gemini_api_key = GEMINI_API_KEY_DEFAULT
+    else:
         gemini_api_key = None
     
     # --- FITUR MODE PRESENTASI (DISETEL AKTIF DAN TERSEMBUNYI) ---
