@@ -943,7 +943,7 @@ with st.sidebar:
             <p style="margin: 0; font-size: 0.95rem;">
                 <strong style="color: {gemini_status_color};">{gemini_status}</strong> - Library Gemini sudah terinstall!<br>
                 Masukkan API key Gemini untuk menggunakan AI Vision dalam deteksi buah naga (TAHAP 1).<br>
-                Jika tidak diisi, sistem akan menggunakan default API key dari konfigurasi.
+                Jika tidak diisi, sistem akan menggunakan API key default yang telah dikonfigurasi.
             </p>
         </div>
         """, unsafe_allow_html=True)
@@ -960,9 +960,8 @@ with st.sidebar:
         # Gunakan input user atau default dari config
         gemini_api_key = gemini_api_key_input if gemini_api_key_input.strip() else GEMINI_API_KEY_DEFAULT
         
-        # Info tentang API key yang digunakan
-        if not gemini_api_key_input.strip():
-            st.info(f"ℹ️ Menggunakan API key default dari konfigurasi (config_gemini.py)")
+        # Jangan tampilkan info tentang API key yang digunakan (untuk keamanan)
+        # Info dihapus untuk mencegah exposure API key
         
         # Test koneksi API key (opsional)
         with st.expander("🧪 Test Koneksi API Key", expanded=False):
