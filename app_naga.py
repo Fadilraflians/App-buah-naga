@@ -56,7 +56,7 @@ st.set_page_config(
     page_title="Klasifikasi Kematangan Buah Naga", # Dihapus (Lokal)
     page_icon="🐉",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
 # Tambahkan meta tag untuk mobile viewport
@@ -205,9 +205,9 @@ st.markdown("""
     section[data-testid="stSidebar"][aria-hidden="true"] ~ .main .block-container {
         margin-left: auto !important;
         margin-right: auto !important;
-        margin-top: 0rem !important;
+        margin-top: -1rem !important;
         margin-bottom: 1rem !important;
-        padding-top: 0.5rem !important;
+        padding-top: 0 !important;
         padding-bottom: 2rem !important;
         padding-left: 2rem !important;
         padding-right: 2rem !important;
@@ -231,9 +231,46 @@ st.markdown("""
         box-shadow: 4px 0 30px rgba(78, 205, 196, 0.3) !important;
     }
     
-    /* Sidebar saat tertutup */
+    /* Sidebar saat tertutup - benar-benar tidak terlihat sama sekali */
     section[data-testid="stSidebar"][aria-hidden="true"] {
-        transform: translateX(-100%) !important;
+        display: none !important;
+        visibility: hidden !important;
+        width: 0px !important;
+        min-width: 0px !important;
+        max-width: 0px !important;
+        height: 0px !important;
+        opacity: 0 !important;
+        overflow: hidden !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        position: absolute !important;
+        left: -9999px !important;
+        top: -9999px !important;
+        z-index: -1 !important;
+        pointer-events: none !important;
+    }
+    
+    /* Pastikan semua elemen dalam sidebar tersembunyi */
+    section[data-testid="stSidebar"][aria-hidden="true"] * {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        width: 0 !important;
+        height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+    
+    /* Sidebar container - sembunyikan saat tertutup */
+    section[data-testid="stSidebar"][aria-hidden="true"] .css-1d391kg {
+        display: none !important;
+        visibility: hidden !important;
+        width: 0 !important;
+        opacity: 0 !important;
     }
     
     .css-1d391kg {
@@ -247,13 +284,19 @@ st.markdown("""
     }
     
     .main-header {
-        font-size: 3.5rem;
-        font-weight: bold;
+        font-size: 3rem;
+        font-weight: 900;
         text-align: center;
-        color: #90EE90;
-        margin-top: 0rem !important;
+        color: white;
+        margin-top: -1rem !important;
         margin-bottom: 0.5rem !important;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        padding: 0.25rem 0 !important;
+        text-shadow: 
+            0 0 20px rgba(78, 205, 196, 0.8),
+            0 0 40px rgba(78, 205, 196, 0.6),
+            0 4px 8px rgba(0, 0, 0, 0.3);
+        letter-spacing: -0.02em;
+        line-height: 1.1;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -1002,9 +1045,40 @@ st.markdown("""
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
         }
         
-        /* Sidebar tertutup di mobile - sembunyikan ke kiri */
+        /* Sidebar tertutup di mobile - benar-benar tidak terlihat */
         section[data-testid="stSidebar"][aria-hidden="true"] {
+            display: none !important;
+            visibility: hidden !important;
+            width: 0px !important;
+            min-width: 0px !important;
+            max-width: 0px !important;
+            height: 0px !important;
+            opacity: 0 !important;
             transform: translateX(-100%) !important;
+            overflow: hidden !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            border: none !important;
+            box-shadow: none !important;
+            position: fixed !important;
+            left: -9999px !important;
+            top: -9999px !important;
+            z-index: -1 !important;
+        }
+        
+        /* Pastikan elemen dalam sidebar tersembunyi */
+        section[data-testid="stSidebar"][aria-hidden="true"] *,
+        section[data-testid="stSidebar"][aria-hidden="true"] .css-1d391kg,
+        section[data-testid="stSidebar"][aria-hidden="true"] .element-container,
+        section[data-testid="stSidebar"][aria-hidden="true"] > div,
+        section[data-testid="stSidebar"][aria-hidden="true"] > * {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            width: 0 !important;
+            height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
         }
         
         /* Sidebar terbuka di mobile */
@@ -1399,8 +1473,52 @@ st.markdown("""
     @media (min-width: 1025px) {
         section[data-testid="stSidebar"] {
             position: relative !important;
-            transform: none !important;
             height: auto !important;
+        }
+        
+        /* Desktop - sidebar terbuka */
+        section[data-testid="stSidebar"]:not([aria-hidden="true"]) {
+            transform: none !important;
+            width: auto !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            display: block !important;
+        }
+        
+        /* Desktop - sidebar tertutup benar-benar tidak terlihat */
+        section[data-testid="stSidebar"][aria-hidden="true"] {
+            display: none !important;
+            visibility: hidden !important;
+            width: 0px !important;
+            min-width: 0px !important;
+            max-width: 0px !important;
+            height: 0px !important;
+            opacity: 0 !important;
+            transform: translateX(-100%) !important;
+            overflow: hidden !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            border: none !important;
+            box-shadow: none !important;
+            position: fixed !important;
+            left: -9999px !important;
+            top: -9999px !important;
+            z-index: -1 !important;
+        }
+        
+        /* Pastikan elemen dalam sidebar tersembunyi */
+        section[data-testid="stSidebar"][aria-hidden="true"] *,
+        section[data-testid="stSidebar"][aria-hidden="true"] .css-1d391kg,
+        section[data-testid="stSidebar"][aria-hidden="true"] .element-container,
+        section[data-testid="stSidebar"][aria-hidden="true"] > div,
+        section[data-testid="stSidebar"][aria-hidden="true"] > * {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            width: 0 !important;
+            height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
         }
         
         section[data-testid="stSidebar"]:not([aria-hidden="true"])::before {
@@ -1860,251 +1978,45 @@ model_vgg16, model_mobilenetv2 = load_models()
 
 
 # ==============================================================================
-# BAGIAN 1.3: SIDEBAR INFORMASI DAN PENGATURAN
+# BAGIAN 1.3: KONFIGURASI (DIPINDAHKAN DARI SIDEBAR KE MAIN CONTENT)
 # ==============================================================================
 
+# Sidebar dikosongkan - konten dipindahkan ke main content
 with st.sidebar:
-    # Gunakan session state untuk toggle expand/collapse
-    if 'show_model_info' not in st.session_state:
-        st.session_state.show_model_info = True
-    
-    # Header dengan toggle button yang jelas terlihat
-    toggle_icon = "🔽 Tutup" if st.session_state.show_model_info else "▶️ Buka"
-    
-    # Header dengan toggle button yang jelas terlihat
-    st.markdown("""
-    <div style="background: linear-gradient(135deg, #2C3E50 0%, #34495E 100%); 
-                padding: 0.75rem; border-radius: 12px; margin-bottom: 0.75rem;
-                border: 2px solid #4ECDC4;">
-        <h2 style="color: white; text-align: center; margin: 0; font-size: 1.1rem;">📊 Informasi Model</h2>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Label untuk tombol (agar jelas) - lebih compact
-    col_status, col_toggle = st.columns([2, 1])
-    with col_status:
-        st.markdown(f"<small>**Status:** {'Terbuka' if st.session_state.show_model_info else 'Tertutup'}</small>", unsafe_allow_html=True)
-    with col_toggle:
-        # Tombol toggle - sederhana dan pasti muncul
-        toggle_clicked = st.button(
-            toggle_icon, 
-            key="toggle_model_info",
-            help="Klik untuk membuka/menutup informasi model",
-            use_container_width=True
-        )
-    
-    if toggle_clicked:
-        st.session_state.show_model_info = not st.session_state.show_model_info
-        st.rerun()
-    
-    # Tampilkan konten jika expanded
-    if st.session_state.show_model_info:
-        if model_performance_metrics:
-            # Gunakan .get() untuk menghindari KeyError
-            sidebar_vgg16_accuracy = model_performance_metrics.get('vgg16', {}).get('accuracy', 0.0)
-            sidebar_vgg16_size = model_performance_metrics.get('vgg16', {}).get('model_size_mb', 0.0)
-            sidebar_mobilenetv2_accuracy = model_performance_metrics.get('mobilenetv2', {}).get('accuracy', 0.0)
-            sidebar_mobilenetv2_size = model_performance_metrics.get('mobilenetv2', {}).get('model_size_mb', 0.0)
-            
-            st.markdown("### 🎯 Akurasi Model")
-            col1, col2 = st.columns(2)
-            with col1:
-                st.markdown(f"""
-                <div class="metric-container" style="padding: 0.75rem; margin-bottom: 0.5rem;">
-                    <h4 style="color: #4ECDC4; margin: 0 0 0.25rem 0; font-size: 0.9rem;">VGG16</h4>
-                    <h2 style="color: #FF6B6B; margin: 0; font-size: 1.3rem;">{sidebar_vgg16_accuracy:.1%}</h2>
-                </div>
-                """, unsafe_allow_html=True)
-            with col2:
-                st.markdown(f"""
-                <div class="metric-container" style="padding: 0.75rem; margin-bottom: 0.5rem;">
-                    <h4 style="color: #4ECDC4; margin: 0 0 0.25rem 0; font-size: 0.9rem;">MobileNetV2</h4>
-                    <h2 style="color: #FF6B6B; margin: 0; font-size: 1.3rem;">{sidebar_mobilenetv2_accuracy:.1%}</h2>
-                </div>
-                """, unsafe_allow_html=True)
-            
-            st.markdown("### 📏 Ukuran Model")
-            col3, col4 = st.columns(2)
-            with col3:
-                st.markdown(f"""
-                <div class="metric-container" style="padding: 0.75rem; margin-bottom: 0.5rem;">
-                    <h4 style="color: #45B7D1; margin: 0 0 0.25rem 0; font-size: 0.9rem;">VGG16</h4>
-                    <h3 style="color: #FFFFFF; margin: 0; font-size: 1.1rem;">{sidebar_vgg16_size:.1f} MB</h3>
-                </div>
-                """, unsafe_allow_html=True)
-            with col4:
-                st.markdown(f"""
-                <div class="metric-container" style="padding: 0.75rem; margin-bottom: 0.5rem;">
-                    <h4 style="color: #45B7D1; margin: 0 0 0.25rem 0; font-size: 0.9rem;">MobileNetV2</h4>
-                    <h3 style="color: #FFFFFF; margin: 0; font-size: 1.1rem;">{sidebar_mobilenetv2_size:.1f} MB</h3>
-                </div>
-                """, unsafe_allow_html=True)
-        else:
-            st.markdown("""
-            <div class="warning-box">
-                <h4>⚠ Metrik model tidak tersedia</h4>
-            </div>
-            """, unsafe_allow_html=True)
-    
-    st.markdown("---")
-    
-    # --- Tampilan Judul Pengaturan Prediksi Dihapus ---
-    # st.markdown("### 🔧 Pengaturan Prediksi")
-    
-    # --- Tampilan Slider Batas Kepercayaan Dihapus ---
-    # confidence_threshold = st.slider(
-    #     "Pilih Batas Kepercayaan (%)",
-    #     min_value=0,
-    #     max_value=100,
-    #     value=75,
-    #     step=5,
-    #     help="Jika tingkat kepercayaan prediksi di bawah batas ini, hasil akan dianggap tidak valid."
-    # )
-    
-    # Atur batas kepercayaan secara permanen di kode
-    # Threshold diubah menjadi 80% untuk mengkategorikan confidence sebagai "tinggi"
-    confidence_threshold = 80 
-    
-    # ==============================================================================
-    # BAGIAN: KONFIGURASI GEMINI API KEY (DIPISAHKAN UNTUK KEMUDAHAN MAINTENANCE)
-    # ==============================================================================
-    st.markdown("---")
-    st.markdown("### 🔑 API Key Gemini (Opsional)")
-    
-    # Cek apakah library tersedia
-    try:
-        import importlib
-        if GEMINI_AVAILABLE:
-            importlib.reload(genai) if 'genai' in globals() and genai is not None else None
-        else:
-            raise ImportError("Library tidak tersedia")
-    except Exception:
-        try:
-            import google.generativeai as genai  # type: ignore
-            globals()['genai'] = genai
-            globals()['GEMINI_AVAILABLE'] = True
-        except ImportError:
-            pass
-    
-    # Tampilkan status library Gemini
+    pass  # Sidebar kosong
+
+# Atur batas kepercayaan secara permanen di kode
+# Threshold diubah menjadi 80% untuk mengkategorikan confidence sebagai "tinggi"
+confidence_threshold = 80 
+
+# Konfigurasi Gemini API Key
+try:
+    import importlib
     if GEMINI_AVAILABLE:
-        st.markdown("""
-        <div style="background: linear-gradient(135deg, #1A1A2E 0%, #16213E 100%); 
-                    padding: 1rem; border-radius: 10px; border: 2px solid #4ECDC4; 
-                    margin-bottom: 1rem;">
-            <p style="color: #2ECC71; margin: 0 0 0.5rem 0; font-weight: 600;">
-                ✅ Tersedia - Library Gemini sudah terinstall!
-            </p>
-            <p style="color: white; margin: 0; font-size: 0.9rem; line-height: 1.6;">
-                Masukkan API key Gemini untuk menggunakan AI Vision dalam deteksi buah naga (TAHAP 1).<br>
-                Jika tidak diisi, sistem akan menggunakan API key default yang telah dikonfigurasi.
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
+        importlib.reload(genai) if 'genai' in globals() and genai is not None else None
     else:
-        st.markdown("""
-        <div style="background: linear-gradient(135deg, #1A1A2E 0%, #16213E 100%); 
-                    padding: 1rem; border-radius: 10px; border: 2px solid #E74C3C; 
-                    margin-bottom: 1rem;">
-            <p style="color: #E74C3C; margin: 0; font-weight: 600;">
-                ❌ Library Gemini tidak tersedia
-            </p>
-            <p style="color: white; margin: 0.5rem 0 0 0; font-size: 0.9rem;">
-                Install dengan: pip install google-generativeai
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    # Input field untuk API key - DISEMBUNYIKAN untuk keamanan
-    # gemini_api_key_input = st.text_input(
-    #     "Gemini API Key",
-    #     value="",
-    #     type="password",
-    #     help="Kosongkan untuk menggunakan API key default yang telah dikonfigurasi",
-    #     placeholder="Kosongkan untuk menggunakan default"
-    # )
-    
-    # Gunakan nilai kosong (tidak ada input dari user)
-    gemini_api_key_input = ""
-    
-    # Tombol test koneksi
-    if st.button("🧪 Test Koneksi API Key", use_container_width=True):
-        test_api_key = gemini_api_key_input if gemini_api_key_input else GEMINI_API_KEY_DEFAULT
-        
-        if test_api_key:
-            try:
-                if GEMINI_AVAILABLE:
-                    genai.configure(api_key=test_api_key)
-                    # Test dengan list models
-                    models = genai.list_models()
-                    st.success("✅ Koneksi berhasil! API key valid.")
-                else:
-                    st.error("❌ Library Gemini tidak tersedia.")
-            except Exception as e:
-                st.error(f"❌ Koneksi gagal: {str(e)}")
-        else:
-            st.warning("⚠️ Masukkan API key terlebih dahulu.")
-    
-    # Gunakan API key dari input atau default
-    if gemini_api_key_input:
-        gemini_api_key = gemini_api_key_input
-    elif GEMINI_AVAILABLE:
-        gemini_api_key = GEMINI_API_KEY_DEFAULT
-    else:
-        gemini_api_key = None
-    
-    # --- FITUR MODE PRESENTASI (DISETEL AKTIF DAN TERSEMBUNYI) ---
-    # Tampilan di sidebar dihapus untuk presentasi yang bersih.
-    # Mode demo diatur ke True secara permanen untuk memastikan skor tinggi.
-    demo_mode = False  # Nonaktifkan demo mode agar deteksi buah naga berjalan dengan benar 
-    
-    # --- Tampilan Mode Presentasi Dihapus ---
-    # st.markdown("---")
-    # st.markdown("### ⚠ Mode Presentasi")
-    # demo_mode = st.checkbox(
-    #     "Aktifkan Skor Demo (di atas 85%)",
-    #     value=False,
-    #     help="Hanya untuk demo. Ini akan memalsukan skor kepercayaan agar selalu tinggi."
-    # )
-    # if demo_mode:
-    #     st.warning("Mode Presentasi AKTIF. Skor yang ditampilkan tidak nyata.")
-    # --- Akhir Tampilan yang Dihapus ---
-    
-    st.markdown("---")
-    st.markdown("### 📝 Cara Penggunaan")
-    st.markdown("""
-    <div class="info-box">
-        <p style="margin: 0 0 0.5rem 0;"><strong>Pilih metode input:</strong></p>
-        <ol style="margin: 0; padding-left: 1.5rem;">
-            <li><strong>📤 Upload File:</strong> Pilih gambar dari komputer</li>
-            <li><strong>📷 Scan dengan Kamera:</strong> Gunakan kamera untuk mengambil foto langsung</li>
-            <li>⏳ Tunggu proses klasifikasi</li>
-            <li>📊 Lihat hasil prediksi</li>
-        </ol>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    st.markdown("---")
-    st.markdown("### 🏷 Label Kelas")
-    for i, class_name in enumerate(CLASS_NAMES):
-        if "Mature" in class_name:
-            st.markdown(f"""
-            <div class="success-box" style="padding: 1rem; margin-top: 0.5rem;">
-                <p style="margin: 0;">🍎 <strong>{class_name}</strong><br>Buah Naga Matang</p>
-            </div>
-            """, unsafe_allow_html=True)
-        elif "Immature" in class_name:
-            st.markdown(f"""
-            <div class="warning-box" style="padding: 1rem; margin-top: 0.5rem; background: linear-gradient(135deg, #3498DB 0%, #2980B9 100%); border-color: #FFFFFF;">
-                <p style="margin: 0;">🍏 <strong>{class_name}</strong><br>Buah Naga Mentah</p>
-            </div>
-            """, unsafe_allow_html=True)
-        elif "Defect" in class_name:
-            st.markdown(f"""
-            <div class="warning-box" style="padding: 1rem; margin-top: 0.5rem;">
-                <p style="margin: 0;">🍎 <strong>{class_name}</strong><br>Buah Naga Busuk</p>
-            </div>
-            """, unsafe_allow_html=True)
+        raise ImportError("Library tidak tersedia")
+except Exception:
+    try:
+        import google.generativeai as genai  # type: ignore
+        globals()['genai'] = genai
+        globals()['GEMINI_AVAILABLE'] = True
+    except ImportError:
+        pass
+
+# Gunakan nilai kosong (tidak ada input dari user)
+gemini_api_key_input = ""
+
+# Gunakan API key dari input atau default
+if gemini_api_key_input:
+    gemini_api_key = gemini_api_key_input
+elif GEMINI_AVAILABLE:
+    gemini_api_key = GEMINI_API_KEY_DEFAULT
+else:
+    gemini_api_key = None
+
+# Mode demo diatur ke False
+demo_mode = False  # Nonaktifkan demo mode agar deteksi buah naga berjalan dengan benar
 
 
 # ==============================================================================
@@ -2310,30 +2222,153 @@ def predict_image_local(model, img_array, demo_mode=False, confidence_threshold=
 
 # Header utama
 st.markdown('<h1 class="main-header">🐉 Klasifikasi Kematangan Buah Naga</h1>', unsafe_allow_html=True)
+
+# Tentang Aplikasi - Dipindahkan ke atas
 st.markdown("""
 <div style="background: linear-gradient(135deg, #1A1A2E 0%, #16213E 100%);
-            padding: 1.5rem;
+            padding: 1.25rem;
             border-radius: 15px;
             border: 2px solid #4ECDC4;
-            margin: 0.5rem 0;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.3);">
-    <h3 style="color: white; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+            margin: 0.75rem 0;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+            transition: transform 0.3s ease;">
+    <h3 style="color: white; font-weight: 700; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem; font-size: 1.3rem;">
         📋 Tentang Aplikasi
     </h3>
-    <p style="color: white; font-weight: 500; font-size: 1.1rem; line-height: 1.6; margin-bottom: 1rem;">
+    <p style="color: white; font-weight: 500; font-size: 1rem; line-height: 1.6; margin-bottom: 0.75rem;">
         Aplikasi ini menggunakan model <strong style="color: #4ECDC4;">Convolutional Neural Network (CNN)</strong> <strong style="color: #4ECDC4;">VGG16</strong> dan <strong style="color: #4ECDC4;">MobileNetV2</strong> untuk mengklasifikasikan buah naga menjadi:
     </p>
-    <ul style="color: white; font-weight: 500; font-size: 1rem; line-height: 1.8; margin: 0; padding-left: 1.5rem;">
-        <li style="margin-bottom: 0.5rem;">🍎 <strong style="color: #FF6B6B;">Mature Dragon Fruit</strong> - Buah Naga Matang</li>
-        <li style="margin-bottom: 0.5rem;">🍏 <strong style="color: #45B7D1;">Immature Dragon Fruit</strong> - Buah Naga Mentah</li>
-        <li style="margin-bottom: 0.5rem;">🍎 <strong style="color: #E74C3C;">Defect Dragon Fruit</strong> - Buah Naga Busuk</li>
+    <ul style="color: white; font-weight: 500; font-size: 0.95rem; line-height: 1.8; margin: 0; padding-left: 1.5rem;">
+        <li style="margin-bottom: 0.4rem;">🍎 <strong style="color: #FF6B6B;">Mature Dragon Fruit</strong> - Buah Naga Matang</li>
+        <li style="margin-bottom: 0.4rem;">🍏 <strong style="color: #45B7D1;">Immature Dragon Fruit</strong> - Buah Naga Mentah</li>
+        <li style="margin-bottom: 0.4rem;">🍎 <strong style="color: #E74C3C;">Defect Dragon Fruit</strong> - Buah Naga Busuk</li>
     </ul>
 </div>
 """, unsafe_allow_html=True)
 
+# Kontainer untuk expanders dengan styling yang lebih menarik - Background solid (tidak transparan)
+st.markdown("""
+<style>
+    div[data-testid="stExpander"] {
+        margin-bottom: 0.5rem !important;
+        margin-top: 0 !important;
+    }
+    div[data-testid="stExpander"]:first-of-type {
+        margin-top: 0.25rem !important;
+    }
+    div[data-testid="stExpander"] > div:first-child {
+        background: linear-gradient(135deg, #1A1A2E 0%, #16213E 100%) !important;
+        border: 2px solid #4ECDC4 !important;
+        border-radius: 12px !important;
+        padding: 0.75rem 1rem !important;
+        transition: all 0.3s ease !important;
+        box-shadow: 0 4px 12px rgba(78, 205, 196, 0.3) !important;
+    }
+    div[data-testid="stExpander"] > div:first-child:hover {
+        background: linear-gradient(135deg, #1A1A2E 0%, #16213E 100%) !important;
+        box-shadow: 0 6px 20px rgba(78, 205, 196, 0.5) !important;
+        transform: translateY(-2px) !important;
+        border-color: #5EDFD7 !important;
+    }
+    div[data-testid="stExpander"] > div:first-child > div {
+        color: white !important;
+        font-weight: 600 !important;
+        font-size: 1.1rem !important;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# Konten yang dipindahkan dari sidebar - Informasi Model Singkat
+if model_performance_metrics:
+    with st.expander("📊 Informasi Model", expanded=False):
+        sidebar_vgg16_accuracy = model_performance_metrics.get('vgg16', {}).get('accuracy', 0.0)
+        sidebar_vgg16_size = model_performance_metrics.get('vgg16', {}).get('model_size_mb', 0.0)
+        sidebar_mobilenetv2_accuracy = model_performance_metrics.get('mobilenetv2', {}).get('accuracy', 0.0)
+        sidebar_mobilenetv2_size = model_performance_metrics.get('mobilenetv2', {}).get('model_size_mb', 0.0)
+        
+        st.markdown("### 🎯 Akurasi Model")
+        col1, col2 = st.columns(2)
+        with col1:
+            st.metric("VGG16", f"{sidebar_vgg16_accuracy:.1%}")
+        with col2:
+            st.metric("MobileNetV2", f"{sidebar_mobilenetv2_accuracy:.1%}")
+        
+        st.markdown("### 📏 Ukuran Model")
+        col3, col4 = st.columns(2)
+        with col3:
+            st.metric("VGG16", f"{sidebar_vgg16_size:.1f} MB")
+        with col4:
+            st.metric("MobileNetV2", f"{sidebar_mobilenetv2_size:.1f} MB")
+        
+        # Informasi API Key Gemini
+        st.markdown("---")
+        st.markdown("### 🔑 API Key Gemini")
+        if GEMINI_AVAILABLE:
+            st.markdown("""
+            <div style="background: linear-gradient(135deg, rgba(46, 204, 113, 0.2) 0%, rgba(39, 174, 96, 0.2) 100%);
+                        padding: 0.75rem;
+                        border-radius: 10px;
+                        border-left: 4px solid rgba(46, 204, 113, 0.6);
+                        margin: 0.5rem 0;">
+                <p style="color: #A8E6CF; margin: 0; font-size: 0.9rem; line-height: 1.5;">
+                    ✅ <strong>Status:</strong> Library Gemini tersedia dan sudah terinstall<br>
+                    💡 Sistem menggunakan API key default yang telah dikonfigurasi untuk AI Vision dalam deteksi buah naga (TAHAP 1).
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+        else:
+            st.markdown("""
+            <div style="background: linear-gradient(135deg, rgba(231, 76, 60, 0.2) 0%, rgba(192, 57, 43, 0.2) 100%);
+                        padding: 0.75rem;
+                        border-radius: 10px;
+                        border-left: 4px solid rgba(231, 76, 60, 0.6);
+                        margin: 0.5rem 0;">
+                <p style="color: #F5B7B1; margin: 0; font-size: 0.9rem; line-height: 1.5;">
+                    ❌ <strong>Status:</strong> Library Gemini tidak tersedia<br>
+                    💡 Install dengan: <code style="background: rgba(0,0,0,0.2); padding: 0.2rem 0.4rem; border-radius: 4px;">pip install google-generativeai</code>
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+
+# Cara Penggunaan
+with st.expander("📝 Cara Penggunaan", expanded=False):
+    st.markdown("""
+    <div style="background: linear-gradient(135deg, #2C3E50 0%, #34495E 100%); padding: 1rem; border-radius: 10px; border-left: 4px solid #4ECDC4; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+        <p style="margin: 0 0 0.5rem 0; color: white; font-weight: 600;"><strong>Pilih metode input:</strong></p>
+        <ol style="margin: 0; padding-left: 1.5rem; color: white;">
+            <li style="margin-bottom: 0.5rem;"><strong>📤 Upload File:</strong> Pilih gambar dari komputer</li>
+            <li style="margin-bottom: 0.5rem;"><strong>📷 Scan dengan Kamera:</strong> Gunakan kamera untuk mengambil foto langsung</li>
+            <li style="margin-bottom: 0.5rem;">⏳ Tunggu proses klasifikasi</li>
+            <li>📊 Lihat hasil prediksi</li>
+        </ol>
+    </div>
+    """, unsafe_allow_html=True)
+
+# Label Kelas
+with st.expander("🏷 Label Kelas", expanded=False):
+    for i, class_name in enumerate(CLASS_NAMES):
+        if "Mature" in class_name:
+            st.markdown(f"""
+            <div style="background: linear-gradient(135deg, #2ECC71 0%, #27AE60 100%); padding: 1rem; margin-top: 0.5rem; border-radius: 10px; border: 2px solid #4ECDC4; box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);">
+                <p style="margin: 0; color: white; font-weight: 600;">🍎 <strong>{class_name}</strong><br><span style="font-size: 0.9rem;">Buah Naga Matang</span></p>
+            </div>
+            """, unsafe_allow_html=True)
+        elif "Immature" in class_name:
+            st.markdown(f"""
+            <div style="background: linear-gradient(135deg, #3498DB 0%, #2980B9 100%); padding: 1rem; margin-top: 0.5rem; border-radius: 10px; border: 2px solid #FFFFFF; box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);">
+                <p style="margin: 0; color: white; font-weight: 600;">🍏 <strong>{class_name}</strong><br><span style="font-size: 0.9rem;">Buah Naga Mentah</span></p>
+            </div>
+            """, unsafe_allow_html=True)
+        elif "Defect" in class_name:
+            st.markdown(f"""
+            <div style="background: linear-gradient(135deg, #E74C3C 0%, #C0392B 100%); padding: 1rem; margin-top: 0.5rem; border-radius: 10px; border: 2px solid #FFFFFF; box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);">
+                <p style="margin: 0; color: white; font-weight: 600;">🍎 <strong>{class_name}</strong><br><span style="font-size: 0.9rem;">Buah Naga Busuk</span></p>
+            </div>
+            """, unsafe_allow_html=True)
+
 # Bagian Performa Model dan Hasil Analisis Pelatihan
 st.markdown("""
-<h2 style="font-size: 1.8rem; font-weight: 700; color: white; margin-top: 2rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+<h2 style="font-size: 1.6rem; font-weight: 700; color: white; margin-top: 1.25rem; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
     <span style="display: inline-block; width: 24px; height: 24px; background: #4ECDC4; border-radius: 4px;"></span>
     Performa Model dari Pelatihan
 </h2>
@@ -2894,115 +2929,348 @@ if uploaded_file is not None:
                         confidence_diff_percent = ((mobilenetv2_confidence - vgg16_confidence) / vgg16_confidence) * 100 if vgg16_confidence > 0 else 0
                         explanation = f"Model MobileNetV2 dipilih sebagai model terbaik untuk gambar ini karena memiliki tingkat kepercayaan (confidence) yang lebih tinggi, yaitu {confidence_diff:.1f}% lebih tinggi ({confidence_diff_percent:.1f}% lebih baik) dibandingkan VGG16. MobileNetV2 mencapai confidence sebesar {mobilenetv2_confidence:.1f}% untuk prediksi '{mobilenetv2_class}', sedangkan VGG16 hanya mencapai {vgg16_confidence:.1f}%. Selisih ini menunjukkan bahwa MobileNetV2 lebih yakin dan dapat lebih diandalkan untuk klasifikasi gambar ini."
                     
-                    # Tampilkan analisis menggunakan Streamlit native widgets
+                    # Tampilkan analisis menggunakan custom styling yang lebih nyaman untuk mata
                     st.markdown("---")
-                    st.subheader("🏆 Analisis Perbandingan Model")
+                    st.markdown("""
+                    <div style="background: linear-gradient(135deg, rgba(26, 26, 46, 0.85) 0%, rgba(22, 33, 62, 0.85) 100%);
+                                padding: 1.5rem;
+                                border-radius: 15px;
+                                border: 1px solid rgba(78, 205, 196, 0.3);
+                                margin: 1rem 0;
+                                box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
+                        <h3 style="color: #E8F8F5; font-weight: 600; margin-bottom: 1rem; font-size: 1.3rem;">
+                            🏆 Analisis Perbandingan Model
+                        </h3>
+                    </div>
+                    """, unsafe_allow_html=True)
                     
-                    # Tampilkan perbandingan kedua model
+                    # Tampilkan perbandingan kedua model dengan styling yang lebih soft
                     col1, col2 = st.columns(2)
                     with col1:
-                        st.markdown("#### 🔵 VGG16")
-                        st.write(f"**Prediksi:** {vgg16_class}")
-                        confidence_text = f"**Confidence:** {vgg16_confidence:.1f}%"
-                        if vgg16_high_confidence:
-                            st.success(f"{confidence_text} ✅ Tinggi")
-                        elif vgg16_medium_confidence:
-                            st.info(f"{confidence_text} ℹ️ Sedang")
-                        else:
-                            st.warning(f"{confidence_text} ⚠️ Rendah")
+                        st.markdown(f"""
+                        <div style="background: linear-gradient(135deg, rgba(44, 62, 80, 0.7) 0%, rgba(52, 73, 94, 0.7) 100%);
+                                    padding: 1.25rem;
+                                    border-radius: 12px;
+                                    border: 1px solid rgba(78, 205, 196, 0.4);
+                                    margin-bottom: 1rem;">
+                            <h4 style="color: #BDD4DE; font-weight: 600; margin-bottom: 0.75rem; font-size: 1.1rem;">🔵 VGG16</h4>
+                            <p style="color: #E8F8F5; margin: 0.5rem 0; font-size: 0.95rem;"><strong>Prediksi:</strong> {vgg16_class}</p>
+                            <p style="color: #E8F8F5; margin: 0.5rem 0; font-size: 0.95rem;"><strong>Confidence:</strong> {vgg16_confidence:.1f}%</p>
+                        </div>
+                        """, unsafe_allow_html=True)
                     
                     with col2:
-                        st.markdown("#### 🟢 MobileNetV2")
-                        st.write(f"**Prediksi:** {mobilenetv2_class}")
-                        confidence_text = f"**Confidence:** {mobilenetv2_confidence:.1f}%"
-                        if mobilenetv2_high_confidence:
-                            st.success(f"{confidence_text} ✅ Tinggi")
-                        elif mobilenetv2_medium_confidence:
-                            st.info(f"{confidence_text} ℹ️ Sedang")
-                        else:
-                            st.warning(f"{confidence_text} ⚠️ Rendah")
+                        st.markdown(f"""
+                        <div style="background: linear-gradient(135deg, rgba(44, 62, 80, 0.7) 0%, rgba(52, 73, 94, 0.7) 100%);
+                                    padding: 1.25rem;
+                                    border-radius: 12px;
+                                    border: 1px solid rgba(78, 205, 196, 0.4);
+                                    margin-bottom: 1rem;">
+                            <h4 style="color: #BDD4DE; font-weight: 600; margin-bottom: 0.75rem; font-size: 1.1rem;">🟢 MobileNetV2</h4>
+                            <p style="color: #E8F8F5; margin: 0.5rem 0; font-size: 0.95rem;"><strong>Prediksi:</strong> {mobilenetv2_class}</p>
+                            <p style="color: #E8F8F5; margin: 0.5rem 0; font-size: 0.95rem;"><strong>Confidence:</strong> {mobilenetv2_confidence:.1f}%</p>
+                        </div>
+                        """, unsafe_allow_html=True)
                     
                     st.markdown("---")
                     
-                    # Tampilkan model terbaik
+                    # Tampilkan model terbaik dengan styling yang lebih soft
                     if is_tie:
-                        st.success(f"⭐ **Hasil Perbandingan Model - Keduanya Sama Baik!**")
-                        st.markdown(f"### 🤝 Keduanya Sama-Sama Baik!")
-                        st.write(f"VGG16 dan MobileNetV2 memberikan confidence yang **identik** sebesar **{best_confidence:.1f}%**")
+                        st.markdown(f"""
+                        <div style="background: linear-gradient(135deg, rgba(46, 204, 113, 0.2) 0%, rgba(39, 174, 96, 0.2) 100%);
+                                    padding: 1rem;
+                                    border-radius: 12px;
+                                    border: 1px solid rgba(46, 204, 113, 0.4);
+                                    margin: 1rem 0;">
+                            <p style="color: #A8E6CF; font-weight: 600; margin: 0; font-size: 1.05rem;">
+                                ⭐ <strong>Hasil Perbandingan Model - Keduanya Sama Baik!</strong>
+                            </p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                        st.markdown(f"""
+                        <div style="background: linear-gradient(135deg, rgba(26, 26, 46, 0.85) 0%, rgba(22, 33, 62, 0.85) 100%);
+                                    padding: 1.25rem;
+                                    border-radius: 12px;
+                                    border: 1px solid rgba(78, 205, 196, 0.3);
+                                    margin: 1rem 0;">
+                            <h3 style="color: #E8F8F5; font-weight: 600; margin-bottom: 0.75rem; font-size: 1.2rem;">🤝 Keduanya Sama-Sama Baik!</h3>
+                            <p style="color: #D5E8E4; margin: 0.5rem 0; font-size: 0.95rem; line-height: 1.6;">
+                                VGG16 dan MobileNetV2 memberikan confidence yang <strong>identik</strong> sebesar <strong style="color: #A8E6CF;">{best_confidence:.1f}%</strong>
+                            </p>
+                        </div>
+                        """, unsafe_allow_html=True)
                         
                         col_tie1, col_tie2 = st.columns(2)
                         with col_tie1:
-                            st.info(f"""
-                            **🔵 VGG16**
-                            - Confidence: {vgg16_confidence:.1f}%
-                            - Prediksi: {vgg16_class}
-                            """)
+                            st.markdown(f"""
+                            <div style="background: linear-gradient(135deg, rgba(44, 62, 80, 0.6) 0%, rgba(52, 73, 94, 0.6) 100%);
+                                        padding: 1rem;
+                                        border-radius: 10px;
+                                        border: 1px solid rgba(78, 205, 196, 0.3);
+                                        margin-bottom: 1rem;">
+                                <p style="color: #BDD4DE; font-weight: 600; margin-bottom: 0.5rem; font-size: 1rem;">🔵 VGG16</p>
+                                <p style="color: #D5E8E4; margin: 0.25rem 0; font-size: 0.9rem;">Confidence: <strong style="color: #A8E6CF;">{vgg16_confidence:.1f}%</strong></p>
+                                <p style="color: #D5E8E4; margin: 0.25rem 0; font-size: 0.9rem;">Prediksi: <strong>{vgg16_class}</strong></p>
+                            </div>
+                            """, unsafe_allow_html=True)
                         with col_tie2:
-                            st.info(f"""
-                            **🟢 MobileNetV2**
-                            - Confidence: {mobilenetv2_confidence:.1f}%
-                            - Prediksi: {mobilenetv2_class}
-                            """)
+                            st.markdown(f"""
+                            <div style="background: linear-gradient(135deg, rgba(44, 62, 80, 0.6) 0%, rgba(52, 73, 94, 0.6) 100%);
+                                        padding: 1rem;
+                                        border-radius: 10px;
+                                        border: 1px solid rgba(78, 205, 196, 0.3);
+                                        margin-bottom: 1rem;">
+                                <p style="color: #BDD4DE; font-weight: 600; margin-bottom: 0.5rem; font-size: 1rem;">🟢 MobileNetV2</p>
+                                <p style="color: #D5E8E4; margin: 0.25rem 0; font-size: 0.9rem;">Confidence: <strong style="color: #A8E6CF;">{mobilenetv2_confidence:.1f}%</strong></p>
+                                <p style="color: #D5E8E4; margin: 0.25rem 0; font-size: 0.9rem;">Prediksi: <strong>{mobilenetv2_class}</strong></p>
+                            </div>
+                            """, unsafe_allow_html=True)
                         
-                        st.success(f"✅ **Kesimpulan:** Kedua model memberikan confidence yang identik ({best_confidence:.1f}%) untuk gambar ini. **Tidak ada perbedaan** antara performa VGG16 dan MobileNetV2. Keduanya sama-sama baik dan dapat diandalkan untuk klasifikasi ini.")
+                        st.markdown(f"""
+                        <div style="background: linear-gradient(135deg, rgba(46, 204, 113, 0.15) 0%, rgba(39, 174, 96, 0.15) 100%);
+                                    padding: 1rem;
+                                    border-radius: 10px;
+                                    border-left: 4px solid rgba(46, 204, 113, 0.6);
+                                    margin: 1rem 0;">
+                            <p style="color: #A8E6CF; margin: 0; font-size: 0.95rem; line-height: 1.6;">
+                                ✅ <strong>Kesimpulan:</strong> Kedua model memberikan confidence yang identik ({best_confidence:.1f}%) untuk gambar ini. <strong>Tidak ada perbedaan</strong> antara performa VGG16 dan MobileNetV2. Keduanya sama-sama baik dan dapat diandalkan untuk klasifikasi ini.
+                            </p>
+                        </div>
+                        """, unsafe_allow_html=True)
                     else:
-                        st.success(f"⭐ **Model Terbaik untuk Gambar Ini**")
-                        st.markdown(f"### 🏆 {best_model}")
-                        st.write(f"- **Confidence:** {best_confidence:.1f}%")
-                        st.write(f"- **Prediksi:** {best_class}")
-                        st.write(f"- **Lebih baik {confidence_diff:.1f}%** dari {worst_model} ({worst_confidence:.1f}%)")
-                        st.success(f"✅ **{best_model}** adalah model terbaik untuk gambar ini dengan confidence **{best_confidence:.1f}%**, lebih tinggi **{confidence_diff:.1f}%** ({confidence_diff_percent:.1f}%) dibandingkan {worst_model}.")
+                        st.markdown(f"""
+                        <div style="background: linear-gradient(135deg, rgba(78, 205, 196, 0.2) 0%, rgba(69, 183, 209, 0.2) 100%);
+                                    padding: 1rem;
+                                    border-radius: 12px;
+                                    border: 1px solid rgba(78, 205, 196, 0.4);
+                                    margin: 1rem 0;">
+                            <p style="color: #A8E6CF; font-weight: 600; margin: 0; font-size: 1.05rem;">
+                                ⭐ <strong>Model Terbaik untuk Gambar Ini</strong>
+                            </p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                        st.markdown(f"""
+                        <div style="background: linear-gradient(135deg, rgba(26, 26, 46, 0.85) 0%, rgba(22, 33, 62, 0.85) 100%);
+                                    padding: 1.25rem;
+                                    border-radius: 12px;
+                                    border: 1px solid rgba(78, 205, 196, 0.3);
+                                    margin: 1rem 0;">
+                            <h3 style="color: #E8F8F5; font-weight: 600; margin-bottom: 0.75rem; font-size: 1.2rem;">🏆 {best_model}</h3>
+                            <p style="color: #D5E8E4; margin: 0.5rem 0; font-size: 0.95rem;"><strong>Confidence:</strong> <span style="color: #A8E6CF;">{best_confidence:.1f}%</span></p>
+                            <p style="color: #D5E8E4; margin: 0.5rem 0; font-size: 0.95rem;"><strong>Prediksi:</strong> {best_class}</p>
+                            <p style="color: #D5E8E4; margin: 0.5rem 0; font-size: 0.95rem;"><strong>Lebih baik {confidence_diff:.1f}%</strong> dari {worst_model} ({worst_confidence:.1f}%)</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                        st.markdown(f"""
+                        <div style="background: linear-gradient(135deg, rgba(78, 205, 196, 0.15) 0%, rgba(69, 183, 209, 0.15) 100%);
+                                    padding: 1rem;
+                                    border-radius: 10px;
+                                    border-left: 4px solid rgba(78, 205, 196, 0.6);
+                                    margin: 1rem 0;">
+                            <p style="color: #A8E6CF; margin: 0; font-size: 0.95rem; line-height: 1.6;">
+                                ✅ <strong>{best_model}</strong> adalah model terbaik untuk gambar ini dengan confidence <strong>{best_confidence:.1f}%</strong>, lebih tinggi <strong>{confidence_diff:.1f}%</strong> ({confidence_diff_percent:.1f}%) dibandingkan {worst_model}.
+                            </p>
+                        </div>
+                        """, unsafe_allow_html=True)
                     
                     st.markdown("---")
                     
-                    # Kesimpulan dan Rekomendasi
-                    st.markdown("### 📊 Kesimpulan dan Rekomendasi Analisis")
+                    # Kesimpulan dan Rekomendasi dengan styling yang lebih soft
+                    st.markdown("---")
+                    st.markdown("""
+                    <div style="background: linear-gradient(135deg, rgba(26, 26, 46, 0.85) 0%, rgba(22, 33, 62, 0.85) 100%);
+                                padding: 1.25rem;
+                                border-radius: 12px;
+                                border: 1px solid rgba(78, 205, 196, 0.3);
+                                margin: 1rem 0;">
+                        <h3 style="color: #E8F8F5; font-weight: 600; margin-bottom: 1rem; font-size: 1.2rem;">📊 Kesimpulan dan Rekomendasi Analisis</h3>
+                    </div>
+                    """, unsafe_allow_html=True)
                     
                     # Model Terbaik
                     if is_tie:
-                        st.success(f"🎯 **Model Terbaik:** 🤝 Keduanya Sama-Sama Baik (VGG16 dan MobileNetV2)")
+                        st.markdown(f"""
+                        <div style="background: linear-gradient(135deg, rgba(46, 204, 113, 0.15) 0%, rgba(39, 174, 96, 0.15) 100%);
+                                    padding: 0.75rem 1rem;
+                                    border-radius: 10px;
+                                    border-left: 4px solid rgba(46, 204, 113, 0.6);
+                                    margin: 0.5rem 0;">
+                            <p style="color: #A8E6CF; margin: 0; font-size: 0.95rem;">
+                                🎯 <strong>Model Terbaik:</strong> 🤝 Keduanya Sama-Sama Baik (VGG16 dan MobileNetV2)
+                            </p>
+                        </div>
+                        """, unsafe_allow_html=True)
                     else:
-                        st.success(f"🎯 **Model Terbaik:** 🏆 {best_model}")
+                        st.markdown(f"""
+                        <div style="background: linear-gradient(135deg, rgba(78, 205, 196, 0.15) 0%, rgba(69, 183, 209, 0.15) 100%);
+                                    padding: 0.75rem 1rem;
+                                    border-radius: 10px;
+                                    border-left: 4px solid rgba(78, 205, 196, 0.6);
+                                    margin: 0.5rem 0;">
+                            <p style="color: #A8E6CF; margin: 0; font-size: 0.95rem;">
+                                🎯 <strong>Model Terbaik:</strong> 🏆 {best_model}
+                            </p>
+                        </div>
+                        """, unsafe_allow_html=True)
                     
                     # Alasan Pemilihan
-                    st.markdown("#### 💡 Alasan Pemilihan Model:")
-                    st.write(explanation)
+                    st.markdown("""
+                    <div style="background: linear-gradient(135deg, rgba(44, 62, 80, 0.6) 0%, rgba(52, 73, 94, 0.6) 100%);
+                                padding: 1rem;
+                                border-radius: 10px;
+                                border: 1px solid rgba(78, 205, 196, 0.3);
+                                margin: 1rem 0;">
+                        <h4 style="color: #BDD4DE; font-weight: 600; margin-bottom: 0.75rem; font-size: 1.05rem;">💡 Alasan Pemilihan Model:</h4>
+                        <p style="color: #D5E8E4; margin: 0; font-size: 0.9rem; line-height: 1.6;">{explanation}</p>
+                    </div>
+                    """.format(explanation=explanation), unsafe_allow_html=True)
                     
-                    # Detail Perbandingan
-                    st.markdown("#### 📋 Detail Perbandingan:")
-                    st.write(f"- **Kesepakatan Model:** {'✅ Kedua model sepakat dalam prediksi kelas yang sama' if same_class else '⚠️ Kedua model memberikan prediksi kelas yang berbeda'}")
-                    st.write(f"- **Selisih Confidence:** {confidence_diff:.1f}% {'(hampir identik - keduanya sama baik)' if is_tie else f'({best_model} lebih tinggi dari {worst_model})'}")
-                    st.write(f"- **Prediksi Final:** **{best_class}** dengan confidence **{best_confidence:.1f}%**")
+                    # Detail Perbandingan - Evaluasi conditional expression terlebih dahulu
+                    agreement_text = '✅ Kedua model sepakat dalam prediksi kelas yang sama' if same_class else '⚠️ Kedua model memberikan prediksi kelas yang berbeda'
+                    confidence_diff_text = '(hampir identik - keduanya sama baik)' if is_tie else f'({best_model} lebih tinggi dari {worst_model})'
+                    
+                    st.markdown(f"""
+                    <div style="background: linear-gradient(135deg, rgba(44, 62, 80, 0.6) 0%, rgba(52, 73, 94, 0.6) 100%);
+                                padding: 1rem;
+                                border-radius: 10px;
+                                border: 1px solid rgba(78, 205, 196, 0.3);
+                                margin: 1rem 0;">
+                        <h4 style="color: #BDD4DE; font-weight: 600; margin-bottom: 0.75rem; font-size: 1.05rem;">📋 Detail Perbandingan:</h4>
+                        <ul style="color: #D5E8E4; margin: 0; padding-left: 1.5rem; font-size: 0.9rem; line-height: 1.8;">
+                            <li><strong>Kesepakatan Model:</strong> {agreement_text}</li>
+                            <li><strong>Selisih Confidence:</strong> {confidence_diff:.1f}% {confidence_diff_text}</li>
+                            <li><strong>Prediksi Final:</strong> <strong style="color: #A8E6CF;">{best_class}</strong> dengan confidence <strong style="color: #A8E6CF;">{best_confidence:.1f}%</strong></li>
+                        </ul>
+                    </div>
+                    """, unsafe_allow_html=True)
                     
                     # Rekomendasi
-                    st.markdown("#### ✅ Rekomendasi:")
                     if not is_tie:
-                        st.info(f"Gunakan prediksi dari **{best_model}** karena memiliki confidence **{confidence_diff:.1f}% lebih tinggi** ({confidence_diff_percent:.1f}% lebih baik) dibandingkan {worst_model}. Model ini lebih yakin dengan hasil klasifikasinya dan dapat diandalkan untuk menentukan tingkat kematangan buah naga pada gambar ini.")
+                        recommendation_text = f"Gunakan prediksi dari **{best_model}** karena memiliki confidence **{confidence_diff:.1f}% lebih tinggi** ({confidence_diff_percent:.1f}% lebih baik) dibandingkan {worst_model}. Model ini lebih yakin dengan hasil klasifikasinya dan dapat diandalkan untuk menentukan tingkat kematangan buah naga pada gambar ini."
                     else:
-                        st.info(f"Kedua model (**VGG16** dan **MobileNetV2**) sama-sama baik dan memberikan hasil yang konsisten dengan confidence yang hampir identik. Anda dapat menggunakan prediksi dari model mana saja karena keduanya memiliki tingkat kepercayaan yang sama. Hasil ini menunjukkan bahwa kedua model memiliki performa yang sebanding untuk gambar ini.")
+                        recommendation_text = "Kedua model (**VGG16** dan **MobileNetV2**) sama-sama baik dan memberikan hasil yang konsisten dengan confidence yang hampir identik. Anda dapat menggunakan prediksi dari model mana saja karena keduanya memiliki tingkat kepercayaan yang sama. Hasil ini menunjukkan bahwa kedua model memiliki performa yang sebanding untuk gambar ini."
+                    
+                    st.markdown(f"""
+                    <div style="background: linear-gradient(135deg, rgba(78, 205, 196, 0.15) 0%, rgba(69, 183, 209, 0.15) 100%);
+                                padding: 1rem;
+                                border-radius: 10px;
+                                border-left: 4px solid rgba(78, 205, 196, 0.6);
+                                margin: 1rem 0;">
+                        <h4 style="color: #BDD4DE; font-weight: 600; margin-bottom: 0.75rem; font-size: 1.05rem;">✅ Rekomendasi:</h4>
+                        <p style="color: #D5E8E4; margin: 0; font-size: 0.9rem; line-height: 1.6;">{recommendation_text}</p>
+                    </div>
+                    """, unsafe_allow_html=True)
                     
                 elif vgg16_valid_prediction:
                     # Hanya VGG16 yang valid
                     st.markdown("---")
-                    st.subheader("🏆 Analisis Perbandingan Model")
-                    st.success("⭐ **Model Terbaik: VGG16**")
-                    st.write(f"✅ **VGG16** berhasil melakukan klasifikasi dengan confidence **{vgg16_confidence:.1f}%**.")
-                    st.warning("⚠️ MobileNetV2 tidak dapat memberikan prediksi yang valid untuk gambar ini.")
-                    st.info(f"**Prediksi Final:** {vgg16_class}")
+                    st.markdown("""
+                    <div style="background: linear-gradient(135deg, rgba(26, 26, 46, 0.85) 0%, rgba(22, 33, 62, 0.85) 100%);
+                                padding: 1.5rem;
+                                border-radius: 15px;
+                                border: 1px solid rgba(78, 205, 196, 0.3);
+                                margin: 1rem 0;">
+                        <h3 style="color: #E8F8F5; font-weight: 600; margin-bottom: 1rem; font-size: 1.3rem;">
+                            🏆 Analisis Perbandingan Model
+                        </h3>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    st.markdown(f"""
+                    <div style="background: linear-gradient(135deg, rgba(78, 205, 196, 0.2) 0%, rgba(69, 183, 209, 0.2) 100%);
+                                padding: 1rem;
+                                border-radius: 12px;
+                                border: 1px solid rgba(78, 205, 196, 0.4);
+                                margin: 1rem 0;">
+                        <p style="color: #A8E6CF; font-weight: 600; margin: 0; font-size: 1.05rem;">
+                            ⭐ <strong>Model Terbaik: VGG16</strong>
+                        </p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    st.markdown(f"""
+                    <div style="background: linear-gradient(135deg, rgba(44, 62, 80, 0.6) 0%, rgba(52, 73, 94, 0.6) 100%);
+                                padding: 1rem;
+                                border-radius: 10px;
+                                border: 1px solid rgba(78, 205, 196, 0.3);
+                                margin: 1rem 0;">
+                        <p style="color: #D5E8E4; margin: 0.5rem 0; font-size: 0.95rem;">
+                            ✅ <strong>VGG16</strong> berhasil melakukan klasifikasi dengan confidence <strong style="color: #A8E6CF;">{vgg16_confidence:.1f}%</strong>.
+                        </p>
+                        <p style="color: #F5B7B1; margin: 0.5rem 0; font-size: 0.95rem;">
+                            ⚠️ MobileNetV2 tidak dapat memberikan prediksi yang valid untuk gambar ini.
+                        </p>
+                        <p style="color: #BDD4DE; margin: 0.5rem 0; font-size: 0.95rem;">
+                            <strong>Prediksi Final:</strong> <strong style="color: #A8E6CF;">{vgg16_class}</strong>
+                        </p>
+                    </div>
+                    """, unsafe_allow_html=True)
                     
                 elif mobilenetv2_valid_prediction:
                     # Hanya MobileNetV2 yang valid
                     st.markdown("---")
-                    st.subheader("🏆 Analisis Perbandingan Model")
-                    st.success("⭐ **Model Terbaik: MobileNetV2**")
-                    st.write(f"✅ **MobileNetV2** berhasil melakukan klasifikasi dengan confidence **{mobilenetv2_confidence:.1f}%**.")
-                    st.warning("⚠️ VGG16 tidak dapat memberikan prediksi yang valid untuk gambar ini.")
-                    st.info(f"**Prediksi Final:** {mobilenetv2_class}")
+                    st.markdown("""
+                    <div style="background: linear-gradient(135deg, rgba(26, 26, 46, 0.85) 0%, rgba(22, 33, 62, 0.85) 100%);
+                                padding: 1.5rem;
+                                border-radius: 15px;
+                                border: 1px solid rgba(78, 205, 196, 0.3);
+                                margin: 1rem 0;">
+                        <h3 style="color: #E8F8F5; font-weight: 600; margin-bottom: 1rem; font-size: 1.3rem;">
+                            🏆 Analisis Perbandingan Model
+                        </h3>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    st.markdown(f"""
+                    <div style="background: linear-gradient(135deg, rgba(78, 205, 196, 0.2) 0%, rgba(69, 183, 209, 0.2) 100%);
+                                padding: 1rem;
+                                border-radius: 12px;
+                                border: 1px solid rgba(78, 205, 196, 0.4);
+                                margin: 1rem 0;">
+                        <p style="color: #A8E6CF; font-weight: 600; margin: 0; font-size: 1.05rem;">
+                            ⭐ <strong>Model Terbaik: MobileNetV2</strong>
+                        </p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    st.markdown(f"""
+                    <div style="background: linear-gradient(135deg, rgba(44, 62, 80, 0.6) 0%, rgba(52, 73, 94, 0.6) 100%);
+                                padding: 1rem;
+                                border-radius: 10px;
+                                border: 1px solid rgba(78, 205, 196, 0.3);
+                                margin: 1rem 0;">
+                        <p style="color: #D5E8E4; margin: 0.5rem 0; font-size: 0.95rem;">
+                            ✅ <strong>MobileNetV2</strong> berhasil melakukan klasifikasi dengan confidence <strong style="color: #A8E6CF;">{mobilenetv2_confidence:.1f}%</strong>.
+                        </p>
+                        <p style="color: #F5B7B1; margin: 0.5rem 0; font-size: 0.95rem;">
+                            ⚠️ VGG16 tidak dapat memberikan prediksi yang valid untuk gambar ini.
+                        </p>
+                        <p style="color: #BDD4DE; margin: 0.5rem 0; font-size: 0.95rem;">
+                            <strong>Prediksi Final:</strong> <strong style="color: #A8E6CF;">{mobilenetv2_class}</strong>
+                        </p>
+                    </div>
+                    """, unsafe_allow_html=True)
                 else:
                     # Tidak ada model yang valid
                     st.markdown("---")
-                    st.subheader("⚠️ Analisis Perbandingan Model")
-                    st.error("**Tidak Ada Model yang Valid**")
+                    st.markdown("""
+                    <div style="background: linear-gradient(135deg, rgba(26, 26, 46, 0.85) 0%, rgba(22, 33, 62, 0.85) 100%);
+                                padding: 1.5rem;
+                                border-radius: 15px;
+                                border: 1px solid rgba(231, 76, 60, 0.4);
+                                margin: 1rem 0;">
+                        <h3 style="color: #F5B7B1; font-weight: 600; margin-bottom: 1rem; font-size: 1.3rem;">
+                            ⚠️ Analisis Perbandingan Model
+                        </h3>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    st.markdown("""
+                    <div style="background: linear-gradient(135deg, rgba(231, 76, 60, 0.2) 0%, rgba(192, 57, 43, 0.2) 100%);
+                                padding: 1rem;
+                                border-radius: 12px;
+                                border: 1px solid rgba(231, 76, 60, 0.4);
+                                margin: 1rem 0;">
+                        <p style="color: #F5B7B1; font-weight: 600; margin: 0; font-size: 1.05rem;">
+                            ❌ <strong>Tidak Ada Model yang Valid</strong>
+                        </p>
+                    </div>
+                    """, unsafe_allow_html=True)
                     st.warning("⚠️ Kedua model (VGG16 dan MobileNetV2) tidak dapat memberikan prediksi yang valid untuk gambar ini. Kemungkinan gambar yang diunggah bukan buah naga atau memiliki kualitas yang tidak memadai.")
             else:
                 # Jika salah satu atau kedua class adalah None
@@ -3069,11 +3337,19 @@ if uploaded_file is not None:
             """, unsafe_allow_html=True)
 
     except Exception as e:
+        # Format error message dengan aman untuk menghindari menampilkan kode mentah
+        error_message = str(e)
+        # Hapus karakter yang mungkin menyebabkan masalah dalam HTML
+        error_message = error_message.replace('<', '&lt;').replace('>', '&gt;')
+        # Batasi panjang error message untuk menghindari menampilkan terlalu banyak detail teknis
+        if len(error_message) > 200:
+            error_message = error_message[:200] + "..."
+        
         st.markdown(f"""
         <div class="warning-box">
             <h4>❌ Terjadi Kesalahan</h4>
             <p>Terjadi kesalahan saat membuka atau memproses gambar.</p>
-            <p><strong>Error:</strong> {e}</p>
+            <p><strong>Error:</strong> {error_message}</p>
             <p>Pastikan gambar yang diunggah adalah file gambar yang valid (JPG/PNG).</p>
         </div>
         """, unsafe_allow_html=True)
