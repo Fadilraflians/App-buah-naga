@@ -1085,8 +1085,20 @@ st.markdown("""
         }
         
         /* Sidebar text lebih kecil di mobile */
+        section[data-testid="stSidebar"] h2 {
+            font-size: 1.1rem !important;
+        }
+        
+        section[data-testid="stSidebar"] h3 {
+            font-size: 0.95rem !important;
+        }
+        
+        section[data-testid="stSidebar"] h4 {
+            font-size: 0.9rem !important;
+        }
+        
         .css-1d391kg h2 {
-            font-size: 1.2rem !important;
+            font-size: 1.1rem !important;
         }
         
         .css-1d391kg h3 {
@@ -1102,8 +1114,12 @@ st.markdown("""
         }
         
         /* Sidebar padding lebih kecil */
+        section[data-testid="stSidebar"] .element-container {
+            padding: 0.5rem 0.25rem !important;
+        }
+        
         .css-1d391kg .element-container {
-            padding: 0.5rem 0 !important;
+            padding: 0.5rem 0.25rem !important;
         }
         
         /* Tab styling untuk mobile */
@@ -1267,12 +1283,43 @@ st.markdown("""
         
         /* Sidebar - full width di mobile kecil */
         section[data-testid="stSidebar"] {
-            width: 90% !important;
+            width: 85% !important;
             max-width: 280px !important;
+            font-size: 0.9rem !important;
+        }
+        
+        section[data-testid="stSidebar"] p {
+            font-size: 0.85rem !important;
+            line-height: 1.4 !important;
+        }
+        
+        section[data-testid="stSidebar"] .stButton > button {
+            font-size: 0.9rem !important;
+            padding: 0.5rem 0.75rem !important;
+        }
+        
+        section[data-testid="stSidebar"] [data-testid="column"] {
+            min-width: 48% !important;
+            padding: 0.25rem !important;
+        }
+        
+        section[data-testid="stSidebar"] .metric-container {
+            padding: 0.5rem !important;
+            margin-bottom: 0.5rem !important;
+        }
+        
+        section[data-testid="stSidebar"] .metric-container h2,
+        section[data-testid="stSidebar"] .metric-container h3,
+        section[data-testid="stSidebar"] .metric-container h4 {
+            margin: 0.25rem 0 !important;
+        }
+        
+        section[data-testid="stSidebar"] .stColumns {
+            gap: 0.5rem !important;
         }
         
         .css-1d391kg {
-            width: 90% !important;
+            width: 85% !important;
             max-width: 280px !important;
         }
         
@@ -1827,22 +1874,24 @@ with st.sidebar:
     # Header dengan toggle button yang jelas terlihat
     st.markdown("""
     <div style="background: linear-gradient(135deg, #2C3E50 0%, #34495E 100%); 
-                padding: 1rem; border-radius: 15px; margin-bottom: 1rem;
+                padding: 0.75rem; border-radius: 12px; margin-bottom: 0.75rem;
                 border: 2px solid #4ECDC4;">
-        <h2 style="color: white; text-align: center; margin: 0;">📊 Informasi Model</h2>
+        <h2 style="color: white; text-align: center; margin: 0; font-size: 1.1rem;">📊 Informasi Model</h2>
     </div>
     """, unsafe_allow_html=True)
     
-    # Label untuk tombol (agar jelas)
-    st.markdown(f"**Status:** {'Terbuka' if st.session_state.show_model_info else 'Tertutup'}")
-    
-    # Tombol toggle - sederhana dan pasti muncul
-    toggle_clicked = st.button(
-        toggle_icon, 
-        key="toggle_model_info",
-        help="Klik untuk membuka/menutup informasi model",
-        use_container_width=True
-    )
+    # Label untuk tombol (agar jelas) - lebih compact
+    col_status, col_toggle = st.columns([2, 1])
+    with col_status:
+        st.markdown(f"<small>**Status:** {'Terbuka' if st.session_state.show_model_info else 'Tertutup'}</small>", unsafe_allow_html=True)
+    with col_toggle:
+        # Tombol toggle - sederhana dan pasti muncul
+        toggle_clicked = st.button(
+            toggle_icon, 
+            key="toggle_model_info",
+            help="Klik untuk membuka/menutup informasi model",
+            use_container_width=True
+        )
     
     if toggle_clicked:
         st.session_state.show_model_info = not st.session_state.show_model_info
@@ -1857,37 +1906,37 @@ with st.sidebar:
             sidebar_mobilenetv2_accuracy = model_performance_metrics.get('mobilenetv2', {}).get('accuracy', 0.0)
             sidebar_mobilenetv2_size = model_performance_metrics.get('mobilenetv2', {}).get('model_size_mb', 0.0)
             
-            st.markdown("### 🎯 Akurasi Model (dari Pelatihan)")
+            st.markdown("### 🎯 Akurasi Model")
             col1, col2 = st.columns(2)
             with col1:
                 st.markdown(f"""
-                <div class="metric-container">
-                    <h4 style="color: #4ECDC4; margin: 0;">VGG16</h4>
-                    <h2 style="color: #FF6B6B; margin: 0;">{sidebar_vgg16_accuracy:.1%}</h2>
+                <div class="metric-container" style="padding: 0.75rem; margin-bottom: 0.5rem;">
+                    <h4 style="color: #4ECDC4; margin: 0 0 0.25rem 0; font-size: 0.9rem;">VGG16</h4>
+                    <h2 style="color: #FF6B6B; margin: 0; font-size: 1.3rem;">{sidebar_vgg16_accuracy:.1%}</h2>
                 </div>
                 """, unsafe_allow_html=True)
             with col2:
                 st.markdown(f"""
-                <div class="metric-container">
-                    <h4 style="color: #4ECDC4; margin: 0;">MobileNetV2</h4>
-                    <h2 style="color: #FF6B6B; margin: 0;">{sidebar_mobilenetv2_accuracy:.1%}</h2>
+                <div class="metric-container" style="padding: 0.75rem; margin-bottom: 0.5rem;">
+                    <h4 style="color: #4ECDC4; margin: 0 0 0.25rem 0; font-size: 0.9rem;">MobileNetV2</h4>
+                    <h2 style="color: #FF6B6B; margin: 0; font-size: 1.3rem;">{sidebar_mobilenetv2_accuracy:.1%}</h2>
                 </div>
                 """, unsafe_allow_html=True)
             
-            st.markdown("### 📏 Ukuran Model (dari Pelatihan)")
+            st.markdown("### 📏 Ukuran Model")
             col3, col4 = st.columns(2)
             with col3:
                 st.markdown(f"""
-                <div class="metric-container">
-                    <h4 style="color: #45B7D1; margin: 0;">VGG16</h4>
-                    <h3 style="color: #FFFFFF; margin: 0;">{sidebar_vgg16_size:.1f} MB</h3>
+                <div class="metric-container" style="padding: 0.75rem; margin-bottom: 0.5rem;">
+                    <h4 style="color: #45B7D1; margin: 0 0 0.25rem 0; font-size: 0.9rem;">VGG16</h4>
+                    <h3 style="color: #FFFFFF; margin: 0; font-size: 1.1rem;">{sidebar_vgg16_size:.1f} MB</h3>
                 </div>
                 """, unsafe_allow_html=True)
             with col4:
                 st.markdown(f"""
-                <div class="metric-container">
-                    <h4 style="color: #45B7D1; margin: 0;">MobileNetV2</h4>
-                    <h3 style="color: #FFFFFF; margin: 0;">{sidebar_mobilenetv2_size:.1f} MB</h3>
+                <div class="metric-container" style="padding: 0.75rem; margin-bottom: 0.5rem;">
+                    <h4 style="color: #45B7D1; margin: 0 0 0.25rem 0; font-size: 0.9rem;">MobileNetV2</h4>
+                    <h3 style="color: #FFFFFF; margin: 0; font-size: 1.1rem;">{sidebar_mobilenetv2_size:.1f} MB</h3>
                 </div>
                 """, unsafe_allow_html=True)
         else:
@@ -1913,9 +1962,8 @@ with st.sidebar:
     # )
     
     # Atur batas kepercayaan secara permanen di kode
-    # Karena Mode Demo (skor 85%+) aktif, 
-    # batas 75% ini akan selalu lolos.
-    confidence_threshold = 75 
+    # Threshold diubah menjadi 80% untuk mengkategorikan confidence sebagai "tinggi"
+    confidence_threshold = 80 
     
     # ==============================================================================
     # BAGIAN: KONFIGURASI GEMINI API KEY (DIPISAHKAN UNTUK KEMUDAHAN MAINTENANCE)
@@ -2215,7 +2263,7 @@ def is_dragon_fruit(img_pil, api_key=None, model=None, demo_mode=False):
     except Exception as e:
         return False, 0.0, f"Error: {str(e)}"
 
-def predict_image_local(model, img_array, demo_mode=False, confidence_threshold=75):
+def predict_image_local(model, img_array, demo_mode=False, confidence_threshold=80):
     """
     TAHAP 2: Klasifikasi kematangan buah naga (hanya dipanggil jika sudah terkonfirmasi buah naga).
     MENGGUNAKAN OUTPUT LANGSUNG DARI MODEL .h5 TANPA MODIFIKASI.
@@ -2674,7 +2722,7 @@ if uploaded_file is not None:
                 mobilenetv2_class = "Tidak Valid - Bukan Buah Naga"
             
             st.markdown("---")
-            st.markdown("### 📊 Hasil Akhir Prediksi")
+            st.markdown("### 🔍 Hasil Prediksi Model")
             
             # --- TAMPILKAN UI DENGAN HASIL FINAL (SETELAH VALIDASI) ---
             with col1:
@@ -2771,6 +2819,198 @@ if uploaded_file is not None:
                         <p>Prediksi tidak dapat dilakukan.</p>
                     </div>
                     """, unsafe_allow_html=True)
+            
+            # ==============================================================================
+            # ANALISIS PERBANDINGAN MODEL - HASIL AKHIR PREDIKSI
+            # ==============================================================================
+            st.markdown("---")
+            st.markdown("""
+            <h2 style="font-size: 1.8rem; font-weight: 700; color: white; margin-top: 2rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                <span style="display: inline-block; width: 24px; height: 24px; background: #4ECDC4; border-radius: 4px;"></span>
+                📊 Hasil Akhir Prediksi
+            </h2>
+            """, unsafe_allow_html=True)
+            
+            # Analisis perbandingan model
+            if vgg16_class is not None and mobilenetv2_class is not None:
+                # Tentukan apakah kedua model valid
+                # Model valid jika: (1) bukan "Tidak Valid", (2) ada confidence score, (3) class tidak None
+                vgg16_valid_prediction = ("Tidak Valid" not in vgg16_class and 
+                                         vgg16_class is not None and 
+                                         vgg16_confidence > 0)
+                mobilenetv2_valid_prediction = ("Tidak Valid" not in mobilenetv2_class and 
+                                               mobilenetv2_class is not None and 
+                                               mobilenetv2_confidence > 0)
+                
+                # Analisis perbandingan
+                if vgg16_valid_prediction and mobilenetv2_valid_prediction:
+                    # Kedua model valid - bandingkan confidence dan hasil
+                    confidence_diff = abs(vgg16_confidence - mobilenetv2_confidence)
+                    same_class = vgg16_class == mobilenetv2_class
+                    
+                    # Cek kategori confidence
+                    # Tinggi: >= 80%, Sedang: 50-79%, Rendah: < 50%
+                    vgg16_high_confidence = vgg16_confidence >= 80 if vgg16_confidence > 0 else False
+                    vgg16_medium_confidence = 50 <= vgg16_confidence < 80 if vgg16_confidence > 0 else False
+                    vgg16_low_confidence = vgg16_confidence < 50 if vgg16_confidence > 0 else False
+                    
+                    mobilenetv2_high_confidence = mobilenetv2_confidence >= 80 if mobilenetv2_confidence > 0 else False
+                    mobilenetv2_medium_confidence = 50 <= mobilenetv2_confidence < 80 if mobilenetv2_confidence > 0 else False
+                    mobilenetv2_low_confidence = mobilenetv2_confidence < 50 if mobilenetv2_confidence > 0 else False
+                    
+                    # Tentukan model terbaik berdasarkan confidence
+                    # Gunakan epsilon untuk menangani floating point precision
+                    epsilon = 0.1  # 0.1% tolerance (lebih longgar untuk mengakomodasi pembulatan)
+                    
+                    if abs(vgg16_confidence - mobilenetv2_confidence) < epsilon:
+                        # Confidence sama (dalam toleransi)
+                        is_tie = True
+                        best_model = "Keduanya Sama"
+                        best_confidence = vgg16_confidence
+                        best_class = vgg16_class  # Gunakan prediksi dari salah satu (biasanya sama)
+                        worst_model = None
+                        worst_confidence = None
+                        confidence_diff = abs(vgg16_confidence - mobilenetv2_confidence)
+                        confidence_diff_percent = 0
+                        explanation = f"Kedua model (VGG16 dan MobileNetV2) memberikan confidence yang hampir identik (VGG16: {vgg16_confidence:.1f}% vs MobileNetV2: {mobilenetv2_confidence:.1f}%), dengan selisih hanya {confidence_diff:.2f}%. Ini menunjukkan bahwa kedua model sama-sama yakin dan konsisten dalam melakukan klasifikasi untuk gambar ini. Tidak ada perbedaan signifikan antara performa kedua model, sehingga keduanya dapat diandalkan untuk prediksi ini."
+                    elif vgg16_confidence > mobilenetv2_confidence:
+                        is_tie = False
+                        best_model = "VGG16"
+                        best_confidence = vgg16_confidence
+                        best_class = vgg16_class
+                        worst_model = "MobileNetV2"
+                        worst_confidence = mobilenetv2_confidence
+                        confidence_diff = vgg16_confidence - mobilenetv2_confidence
+                        confidence_diff_percent = ((vgg16_confidence - mobilenetv2_confidence) / mobilenetv2_confidence) * 100 if mobilenetv2_confidence > 0 else 0
+                        explanation = f"Model VGG16 dipilih sebagai model terbaik untuk gambar ini karena memiliki tingkat kepercayaan (confidence) yang lebih tinggi, yaitu {confidence_diff:.1f}% lebih tinggi ({confidence_diff_percent:.1f}% lebih baik) dibandingkan MobileNetV2. VGG16 mencapai confidence sebesar {vgg16_confidence:.1f}% untuk prediksi '{vgg16_class}', sedangkan MobileNetV2 hanya mencapai {mobilenetv2_confidence:.1f}%. Selisih ini menunjukkan bahwa VGG16 lebih yakin dan dapat lebih diandalkan untuk klasifikasi gambar ini."
+                    else:
+                        is_tie = False
+                        best_model = "MobileNetV2"
+                        best_confidence = mobilenetv2_confidence
+                        best_class = mobilenetv2_class
+                        worst_model = "VGG16"
+                        worst_confidence = vgg16_confidence
+                        confidence_diff = mobilenetv2_confidence - vgg16_confidence
+                        confidence_diff_percent = ((mobilenetv2_confidence - vgg16_confidence) / vgg16_confidence) * 100 if vgg16_confidence > 0 else 0
+                        explanation = f"Model MobileNetV2 dipilih sebagai model terbaik untuk gambar ini karena memiliki tingkat kepercayaan (confidence) yang lebih tinggi, yaitu {confidence_diff:.1f}% lebih tinggi ({confidence_diff_percent:.1f}% lebih baik) dibandingkan VGG16. MobileNetV2 mencapai confidence sebesar {mobilenetv2_confidence:.1f}% untuk prediksi '{mobilenetv2_class}', sedangkan VGG16 hanya mencapai {vgg16_confidence:.1f}%. Selisih ini menunjukkan bahwa MobileNetV2 lebih yakin dan dapat lebih diandalkan untuk klasifikasi gambar ini."
+                    
+                    # Tampilkan analisis menggunakan Streamlit native widgets
+                    st.markdown("---")
+                    st.subheader("🏆 Analisis Perbandingan Model")
+                    
+                    # Tampilkan perbandingan kedua model
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.markdown("#### 🔵 VGG16")
+                        st.write(f"**Prediksi:** {vgg16_class}")
+                        confidence_text = f"**Confidence:** {vgg16_confidence:.1f}%"
+                        if vgg16_high_confidence:
+                            st.success(f"{confidence_text} ✅ Tinggi")
+                        elif vgg16_medium_confidence:
+                            st.info(f"{confidence_text} ℹ️ Sedang")
+                        else:
+                            st.warning(f"{confidence_text} ⚠️ Rendah")
+                    
+                    with col2:
+                        st.markdown("#### 🟢 MobileNetV2")
+                        st.write(f"**Prediksi:** {mobilenetv2_class}")
+                        confidence_text = f"**Confidence:** {mobilenetv2_confidence:.1f}%"
+                        if mobilenetv2_high_confidence:
+                            st.success(f"{confidence_text} ✅ Tinggi")
+                        elif mobilenetv2_medium_confidence:
+                            st.info(f"{confidence_text} ℹ️ Sedang")
+                        else:
+                            st.warning(f"{confidence_text} ⚠️ Rendah")
+                    
+                    st.markdown("---")
+                    
+                    # Tampilkan model terbaik
+                    if is_tie:
+                        st.success(f"⭐ **Hasil Perbandingan Model - Keduanya Sama Baik!**")
+                        st.markdown(f"### 🤝 Keduanya Sama-Sama Baik!")
+                        st.write(f"VGG16 dan MobileNetV2 memberikan confidence yang **identik** sebesar **{best_confidence:.1f}%**")
+                        
+                        col_tie1, col_tie2 = st.columns(2)
+                        with col_tie1:
+                            st.info(f"""
+                            **🔵 VGG16**
+                            - Confidence: {vgg16_confidence:.1f}%
+                            - Prediksi: {vgg16_class}
+                            """)
+                        with col_tie2:
+                            st.info(f"""
+                            **🟢 MobileNetV2**
+                            - Confidence: {mobilenetv2_confidence:.1f}%
+                            - Prediksi: {mobilenetv2_class}
+                            """)
+                        
+                        st.success(f"✅ **Kesimpulan:** Kedua model memberikan confidence yang identik ({best_confidence:.1f}%) untuk gambar ini. **Tidak ada perbedaan** antara performa VGG16 dan MobileNetV2. Keduanya sama-sama baik dan dapat diandalkan untuk klasifikasi ini.")
+                    else:
+                        st.success(f"⭐ **Model Terbaik untuk Gambar Ini**")
+                        st.markdown(f"### 🏆 {best_model}")
+                        st.write(f"- **Confidence:** {best_confidence:.1f}%")
+                        st.write(f"- **Prediksi:** {best_class}")
+                        st.write(f"- **Lebih baik {confidence_diff:.1f}%** dari {worst_model} ({worst_confidence:.1f}%)")
+                        st.success(f"✅ **{best_model}** adalah model terbaik untuk gambar ini dengan confidence **{best_confidence:.1f}%**, lebih tinggi **{confidence_diff:.1f}%** ({confidence_diff_percent:.1f}%) dibandingkan {worst_model}.")
+                    
+                    st.markdown("---")
+                    
+                    # Kesimpulan dan Rekomendasi
+                    st.markdown("### 📊 Kesimpulan dan Rekomendasi Analisis")
+                    
+                    # Model Terbaik
+                    if is_tie:
+                        st.success(f"🎯 **Model Terbaik:** 🤝 Keduanya Sama-Sama Baik (VGG16 dan MobileNetV2)")
+                    else:
+                        st.success(f"🎯 **Model Terbaik:** 🏆 {best_model}")
+                    
+                    # Alasan Pemilihan
+                    st.markdown("#### 💡 Alasan Pemilihan Model:")
+                    st.write(explanation)
+                    
+                    # Detail Perbandingan
+                    st.markdown("#### 📋 Detail Perbandingan:")
+                    st.write(f"- **Kesepakatan Model:** {'✅ Kedua model sepakat dalam prediksi kelas yang sama' if same_class else '⚠️ Kedua model memberikan prediksi kelas yang berbeda'}")
+                    st.write(f"- **Selisih Confidence:** {confidence_diff:.1f}% {'(hampir identik - keduanya sama baik)' if is_tie else f'({best_model} lebih tinggi dari {worst_model})'}")
+                    st.write(f"- **Prediksi Final:** **{best_class}** dengan confidence **{best_confidence:.1f}%**")
+                    
+                    # Rekomendasi
+                    st.markdown("#### ✅ Rekomendasi:")
+                    if not is_tie:
+                        st.info(f"Gunakan prediksi dari **{best_model}** karena memiliki confidence **{confidence_diff:.1f}% lebih tinggi** ({confidence_diff_percent:.1f}% lebih baik) dibandingkan {worst_model}. Model ini lebih yakin dengan hasil klasifikasinya dan dapat diandalkan untuk menentukan tingkat kematangan buah naga pada gambar ini.")
+                    else:
+                        st.info(f"Kedua model (**VGG16** dan **MobileNetV2**) sama-sama baik dan memberikan hasil yang konsisten dengan confidence yang hampir identik. Anda dapat menggunakan prediksi dari model mana saja karena keduanya memiliki tingkat kepercayaan yang sama. Hasil ini menunjukkan bahwa kedua model memiliki performa yang sebanding untuk gambar ini.")
+                    
+                elif vgg16_valid_prediction:
+                    # Hanya VGG16 yang valid
+                    st.markdown("---")
+                    st.subheader("🏆 Analisis Perbandingan Model")
+                    st.success("⭐ **Model Terbaik: VGG16**")
+                    st.write(f"✅ **VGG16** berhasil melakukan klasifikasi dengan confidence **{vgg16_confidence:.1f}%**.")
+                    st.warning("⚠️ MobileNetV2 tidak dapat memberikan prediksi yang valid untuk gambar ini.")
+                    st.info(f"**Prediksi Final:** {vgg16_class}")
+                    
+                elif mobilenetv2_valid_prediction:
+                    # Hanya MobileNetV2 yang valid
+                    st.markdown("---")
+                    st.subheader("🏆 Analisis Perbandingan Model")
+                    st.success("⭐ **Model Terbaik: MobileNetV2**")
+                    st.write(f"✅ **MobileNetV2** berhasil melakukan klasifikasi dengan confidence **{mobilenetv2_confidence:.1f}%**.")
+                    st.warning("⚠️ VGG16 tidak dapat memberikan prediksi yang valid untuk gambar ini.")
+                    st.info(f"**Prediksi Final:** {mobilenetv2_class}")
+                else:
+                    # Tidak ada model yang valid
+                    st.markdown("---")
+                    st.subheader("⚠️ Analisis Perbandingan Model")
+                    st.error("**Tidak Ada Model yang Valid**")
+                    st.warning("⚠️ Kedua model (VGG16 dan MobileNetV2) tidak dapat memberikan prediksi yang valid untuk gambar ini. Kemungkinan gambar yang diunggah bukan buah naga atau memiliki kualitas yang tidak memadai.")
+            else:
+                # Jika salah satu atau kedua class adalah None
+                if vgg16_class is None or mobilenetv2_class is None:
+                    st.markdown("---")
+                    st.subheader("⚠️ Analisis Perbandingan Model")
+                    st.error("**Tidak Dapat Melakukan Perbandingan**")
+                    st.warning("⚠️ Sistem tidak dapat melakukan perbandingan karena salah satu atau kedua model tidak memberikan hasil prediksi. Pastikan kedua model sudah dimuat dengan benar dan gambar yang diunggah adalah buah naga.")
             
             # --- LOGIKA TAMPILKAN GRAFIK ---
             # Hanya tampilkan bagian grafik jika setidaknya satu valid DAN skor ada DAN bukan "Tidak Valid"
